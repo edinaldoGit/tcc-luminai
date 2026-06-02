@@ -106,7 +106,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \autor{Francisco Edinaldo dos Santos Silva}
-\titulo{Arquitetura de RAG Multimodal para materiais didáticos: recuperação de granularidade fina de elementos visuais e textuais}
+\titulo{EDGAr: Desenvolvimento de uma Arquitetura RAG Multimodal para Consulta de Documentos Didáticos em PDF}
 \data{2026}
 \local{Quixadá}
 
@@ -160,6 +160,9 @@
 \membrodabancaseiscentro{}
 \membrodabancaseisies{Universidade do Membro da Banca Seis (SIGLA)}
 
+\newcommand{\citeb}[1]{(\citeauthoronline{#1}, \citeyear{#1})}
+\newcommand{\citebp}[2]{(\citeauthoronline{#1}, \citeyear{#1}, p.~#2)}
+
 \begin{document}	
 
 	% Elementos pré-textuais
@@ -169,10 +172,10 @@
 	%\imprimirerrata{elementos-pre-textuais/errata}
 	\imprimirfolhadeaprovacao
 	\imprimirdedicatoria{1-pre-textuais/dedicatoria}
-	\imprimiragradecimentos{1-pre-textuais/agradecimentos}
-	\imprimirepigrafe{1-pre-textuais/epigrafe}
+	%\imprimiragradecimentos{1-pre-textuais/agradecimentos}
+	%\imprimirepigrafe{1-pre-textuais/epigrafe}
 	\imprimirresumo{1-pre-textuais/resumo}
-	\imprimirabstract{1-pre-textuais/abstract}
+	%\imprimirabstract{1-pre-textuais/abstract}
 	\renewcommand*\listfigurename{Lista de Figuras} %Se você comentar esta linha o título da lista fica: LISTA DE ILUSTRAÇÕES
 	\imprimirlistadeilustracoes
 	\imprimirlistadetabelas
@@ -196,16 +199,16 @@
 	%Elementos pós-textuais	
 	\bibliography{3-pos-textuais/referencias}
 %	\imprimirglossario	
-	\imprimirapendices
+	%\imprimirapendices
 		% Adicione aqui os apendices do seu trabalho
 		\input{3-pos-textuais/apendices/apendice-a}
 		\input{3-pos-textuais/apendices/apendice-b}
 		\input{3-pos-textuais/apendices/apendice-c}
 		\input{3-pos-textuais/apendices/apendice-d}
-	\imprimiranexos
+	%\imprimiranexos
 		% Adicione aqui os anexos do seu trabalho
-		\input{3-pos-textuais/anexos/anexo-a}
-		\input{3-pos-textuais/anexos/anexo-b}		
-	\imprimirindice
+		%\input{3-pos-textuais/anexos/anexo-a}
+		%\input{3-pos-textuais/anexos/anexo-b}		
+	%\imprimirindice
 
 \end{document}

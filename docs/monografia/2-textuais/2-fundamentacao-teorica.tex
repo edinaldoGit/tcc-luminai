@@ -1,155 +1,42 @@
-\chapter{Título do segundo capítulo}
+\chapter{Fundamentação Teórica}
 \label{cap:fundamentacao-teorica}
 
-Alguns autores preferem fazer uma ``fundamentação teórica'' no segundo capítulo, outros, preferem fazer uma ``revisão da literatura''. Entretanto, isto é particular de cada trabalho e o autor deve escolher o título mais adequado para o capítulo. Consultar o orientador é importante para determinar o título apropriado.
+Este capítulo apresenta os conceitos estruturais e o panorama tecnológico que sustentam o desenvolvimento deste estudo. Inicialmente, são abordados os grandes modelos de linguagem (LLMs) e o impacto das alucinações semânticas no contexto educacional na Seção 2.1. Em seguida, a Seção 2.2 detalha o funcionamento da arquitetura RAG tradicional e suas limitações diante de documentos com layouts complexos. A evolução para o paradigma multimodal (MRAG) e a aplicação de modelos de visão computacional a documentos são discutidas na Seção 2.3. Por fim, a Seção 2.4 analisa as técnicas de segmentação de layout e extração de componentes digitais, estabelecendo os critérios utilizados no processamento de arquivos PDF.
 
-Evite começar da seção secundária, ou seja, não passe direto do título do capítulo para o título da seção secundária. Escreva um texto para introduzir as seções subsequentes. Lembre-se de utilizar primeira letra maiúscula quando estiver se referindo a um objeto com numeração específica como capítulo, seção, subseção, figura, tabela, quadro, equação, normalmente, se escreve a primeira letra maiúscula da palavra do objeto seguido do \textit{label}. Por exemplo, a Seção \ref{sec:citacoes} explica como fazer citações bibliográficas. Observe no código fonte deste texto como foi feita a referência cruzada. Isso permite enumerar a seção do modo automático o que facilita caso novas seções sejam criadas.  
+\section{Grandes modelos de linguagem e alucinações no ensino}
+\label{sec:llms_e_alucinacoes}
 
-\section{Citações bibliográficas}\label{sec:citacoes}
+A tentativa de fazer com que os computadores compreendam, interpretem e gerem a linguagem humana de forma natural é um dos desafios mais antigos e centrais da Ciência da Computação, concentrado na área de processamento de linguagem natural (PLN). Nos últimos anos, esse campo passou por uma transformação profunda com o surgimento dos LLMs. Essas ferramentas são, essencialmente, redes neurais artificiais de grande escala projetadas para simular a comunicação humana, constituindo a base tecnológica dos sistemas conversacionais e geradores de texto modernos. Esse salto de desempenho foi viabilizado pela criação da arquitetura \textit{Transformer} \citeb{vaswani2017attention}, que inovou ao basear-se inteiramente no mecanismo de autoatenção (\textit{self-attention}). Essa abordagem revolucionou a área ao dispensar a leitura sequencial de uma palavra por vez, permitindo que o sistema analise todas as palavras de um texto simultaneamente. Dessa forma, a inteligência artificial consegue mapear o contexto global e entender como termos diferentes se relacionam ao longo de um documento, algo essencial para o processamento de grandes volumes de dados.
 
-    Esta frase mostra como citar um livro sobre descargas atmosféricas \cite{rakov2003lightning}. Também podem ser citados \textit{sites} como \citeonline{elat2015densidade}. Você precisa escrever o código da referência no arquivo "referencia.bib" dentro da pasta "elementos-pos-textuais". Veja esse, onde estão alguns exemplos que já foram testados.        
+Por trás da aparente inteligência dessas ferramentas, o funcionamento básico de um LLM opera por meio de cálculo probabilístico. Diante de uma pergunta ou comando, o modelo utiliza essa rede de autoatenção não para realizar uma consulta a uma base de dados estática de verdades absolutas, mas para analisar todo o histórico do texto digitado e prever, palavra por palavra, qual é o próximo termo estatisticamente mais adequado para continuar aquela sequência \citeb{tunstall2022natural}. Como esse processo foca em padrões numéricos e na semelhança entre as palavras, o sistema prioriza a construção de uma resposta que pareça natural e coerente para quem lê, mesmo que não haja nenhum mecanismo nativo no modelo que verifique se aquela informação condiz com a realidade \citeb{wolfram2023chatgpt}.
 
-    Referenciando outro livro \cite{LangtangenLogg2017}. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto.
+Essa natureza puramente estatística dá origem a uma limitação estrutural crítica chamada de alucinação semântica, que ocorre quando a inteligência artificial gera respostas textualmente impecáveis, mas que carregam dados falsos ou completamente inventados. Na literatura técnica, essas falhas são divididas em duas categorias: alucinações intrínsecas, quando o modelo contradiz ou ignora as informações que o próprio usuário forneceu no comando; e alucinações extrínsecas, quando o sistema introduz fatos, nomes ou regras que não existem em lugar nenhum das fontes consultadas \citeb{Ji_2023}. Esse fenômeno acontece devido a inconsistências e vieses presentes nos dados usados para treinar a IA, além do próprio comportamento padrão do algoritmo de preferir \textit{``completar a frase''} de forma estética a admitir que não sabe a resposta \citeb{alansari2026large}.
 
-    Referenciando outro site \cite{secretaria1999}. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Citando uma norma \cite{NBR10520:2002}.
-        
-    Citação de duas referências que concordam entre si \cite{Almeida2018,Gondim2017}. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Citando um manual \cite{manuais1989}. 
-        
-    Outro tipo de citação é a citação literal ou direta com mais de três linhas. Este tipo de citação deve ser destacada com recuo de $4~cm$ da margem esquerda com letra menor (tamanho 10), sem aspas e com espaçamento simples.  Para exemplificar esse tipo de citação, considere a afirmação de \citeonline{feitosa2016}:
-    \begin{citacao}
-        A cultura é o processo através do qual o homem cria o algo onde antes imperava o nada. Esse algo é toda complexidade de criações simbólicas, de sentidos e significados que damos às coisas e ao mundo. Um ``algo'' que não se sustenta se não se entender os processos culturais como mecanismos de mediação entre nós e os fenômenos. Assim, mais do que apenas um elemento da comunicação, a mediação é, por excelência, cultural. As diversas modalidades de mediação são apenas sotaques diferenciados dessa mediação cultural. Assim é a mediação informacional.
-    \end{citacao}
-        
-    A afirmação do parágrafo anterior também pode ser reproduzida com a citação na final como mostra o exemplo a seguir: 
-    \begin{citacao}
-        A cultura é o processo através do qual o homem cria o algo onde antes imperava o nada. Esse algo é toda complexidade de criações simbólicas, de sentidos e significados que damos às coisas e ao mundo. Um “algo” que não se sustenta se não se entender os processos culturais como mecanismos de mediação entre nós e os fenômenos. Assim, mais do que apenas um elemento da comunicação, a mediação é, por excelência, cultural. As diversas modalidades de mediação são apenas sotaques diferenciados dessa mediação cultural. Assim é a mediação informacional. \cite{feitosa2016}.
-    \end{citacao}
-        
-%Mais exemplos e opções de citações podem ser encontradas em:
-%        https://en.wikibooks.org/wiki/LaTeX/Bibliography_Management
-%        https://github.com/cfgnunes/latex-cefetmg/blob/master/latex-cefetmg/03-elementos-pos-textuais/apendices.tex            
+No ambiente de ensino, essa vulnerabilidade técnica ganha contornos pedagógicos graves. Ao utilizar um LLM como tutor individualizado ou assistente de estudos, estabelece-se uma relação de confiança entre o estudante e a ferramenta \citeb{kasneci2023chatgpt}. No entanto, como o aluno está justamente no momento de adquirir e consolidar o conhecimento, ele frequentemente não possui o repertório necessário para desconfiar do sistema. O maior perigo reside nas alucinações sutis: respostas escritas com extrema eloquência e autoridade, mas que trazem erros conceituais velados. Esse tipo de falha induz o estudante ao erro de forma silenciosa, consolidando equívocos teóricos e comprometendo a segurança do processo de aprendizado \citeb{holmes2023guidance}.
 
-\section{Inserindo figuras}\label{sec:figuras}
-    
-    A Figura \ref{fig:reitoria} apresenta a fotografia da reitoria da Universidade Federal do Ceará. Observe a estrutura do código para ver como inserir figuras. No título, comece especificando o tipo de figura. Por exemplo, fotografia, desenho, diagrama, fluxograma, gráfico e etc. O espaçamento entre linhas no título é de $1~pt$ (espaçamento simples), apenas a primeira letra da frase é maiúscula. As demais palavras são escritas com letra maiúsculas somente quando são nomes próprios e não há ponto final. 
-    
-    As margens do título da figura são delimitadas pelo tamanho da figura. Por isso, procure ajustar o tamanho da figura para preencher a largura delimitada pelas margens esquerda e direita da página que possui $16~cm$ de largura. Não esqueça de indicar fonte da figura. O autor deve evitar deixar figuras pequenas menores do que $7~cm$ de largura.
-    
-    A posição da figura deve ser o mais próximo logo após ter sido chamada no texto (a figura nunca deve aparecer antes de ter sido anunciada no texto). 
-    
-    %troque h pelo b ou t para mudar a posição da figura.
- 	\begin{figure}[h!] 
-   	    \captionsetup{width=16cm}%Da mesma largura que a figura
-		\Caption{\label{fig:reitoria} Fotografia da reitoria da Universidade Federal do Ceará}
-		\UFCfig{}{
-			\includegraphics[width=16cm]{figuras/exemplo-1}
-		}{
-			\Fonte{\citeonline{UFC2012}.}
-		}	
-	\end{figure}
-	
-    Texto1 texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto1.
+\section{Geração aumentada por recuperação tradicional e suas limitações}
+\label{sec:rag_tradicional}
 
-    Texto2 texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto2.
+Como forma de mitigar as alucinações semânticas e estender a base de conhecimento dos LLMs sem a necessidade de novos treinamentos custosos, a comunidade de inteligência artificial desenvolveu o conceito de Geração Aumentada por Recuperação (RAG) \citeb{NEURIPS2020_6b493230}. Em sua abordagem tradicional, também conhecida como RAG linear ou baseada puramente em texto, o funcionamento do sistema baseia-se em acoplar um motor de busca a um modelo gerador. O processo começa com a preparação dos documentos de suporte, em que arquivos de texto longo são segmentados em blocos menores de tamanho fixo, técnica denominada \textit{chunking}. Em seguida, esses blocos textuais são convertidos em vetores numéricos de alta dimensão, os \textit{embeddings}, que capturam o significado semântico das palavras e são armazenados em um banco de dados vetorial especializado \citeb{gao2023retrieval}.
 
-    Texto3 texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto3.
+A dinâmica de consulta desse ecossistema ocorre em tempo de execução a partir da interação do usuário. Quando um estudante submete uma pergunta à plataforma, essa requisição passa pelo mesmo modelo de conversão para gerar um vetor de busca. O sistema realiza, então, uma busca vetorial no banco de dados por meio de cálculos de proximidade espacial, como a similaridade de cosseno, localizando os blocos de texto que possuem o contexto mais alinhado à dúvida enviada \citeb{tunstall2022natural}. Esses fragmentos de texto recuperados são injetados diretamente no prompt de entrada do LLM, servindo como uma base de conhecimento contextual estendida. Com esse embasamento factual fixado em seu contexto de entrada, o modelo gerador deixa de depender exclusivamente de sua memória probabilística interna para construir a resposta final, reduzindo drasticamente as chances de inventar informações \citeb{NEURIPS2020_6b493230}.
 
-    Texto4 texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto4.
+Apesar do sucesso dessa abordagem para textos corridos e lineares, o RAG tradicional enfrenta severas limitações estruturais quando aplicado a documentos de layout complexo, como livros didáticos e materiais de estudo em formato PDF. O primeiro grande gargalo reside na perda total de elementos não textuais: tabelas, gráficos, infográficos e diagramas explicativos são completamente ignorados pelos extratores de texto padrão, deixando o LLM sem acesso a dados visuais fundamentais para o aprendizado \citeb{faysse2025colpali}. Além disso, a quebra cega do documento em blocos de tamanho fixo corrompe a ordem lógica da informação. Em materiais educacionais, é comum que a explicação teórica esteja disposta ao lado de uma imagem ou distribuída em caixas de destaque; contudo, a leitura linear do RAG ignora essa hierarquia visual e mistura fragmentos desconexos, gerando ruído e comprometendo a qualidade do contexto que subsidia o modelo de linguagem \citeb{gao2023retrieval}.
 
-    A Figura \ref{fig:sondas} Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto3.
+\section{Geração aumentada por recuperação multimodal e modelos de visão}
+\label{sec:rag_multimodal}
 
-	\begin{figure}[h!]
-		\centering
-		\captionsetup{width=14cm}%Da mesma largura que a figura
-		\Caption{\label{fig:sondas} Gráfico da Atmosfera Superior}	
-		\UFCfig{}{
-			\includegraphics[width=14cm]{figuras/sondas}
-		}{
-			\Fonte{adaptado da \citeonline{NASA2016}.}}	
-	\end{figure}
+Para superar as barreiras do RAG tradicional na interpretação de layouts complexos, a área de inteligência artificial evoluiu em direção à Geração Aumentada por Recuperação Multimodal (MRAG) \citeb{mei2025survey}. A principal evolução desse paradigma está na capacidade de alinhar diferentes modalidades de dados, como texto e imagem, dentro de um mesmo espaço vetorial matemático. Sob essa nova ótica, o sistema deixa de fragmentar o documento em linhas de texto isoladas e passa a tratar o material didático a partir de representações visuais unificadas. Isso significa que o modelo consegue correlacionar semanticamente uma dúvida textual submetida por um estudante à imagem correspondente de um gráfico ou tabela que responda àquela questão, conferindo aos elementos visuais o mesmo peso e relevância dos blocos de texto \citeb{mei2025survey}.
 
-    Texto5 texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto5.
+Essa abordagem foi viabilizada pelo surgimento dos modelos de linguagem e visão (\textit{Vision-Language Models} -- VLMs), componentes capazes de processar diretamente as capturas de tela das páginas dos documentos sem a necessidade de intermediários como softwares de processamento OCR. Um marco importante nessa evolução foi a introdução da arquitetura \textit{ColPali}, que utiliza o conceito de \textit{Late Interaction} (interação tardia) para realizar a busca de documentos de forma eficiente \citeb{faysse2025colpali}. Em vez de compactar uma página inteira em um único vetor, o sistema gera múltiplos \textit{embeddings} para cada região da imagem, permitindo que o mecanismo de busca analise os detalhes visuais e textuais simultaneamente em nível granular. Esse processo garante que tabelas complexas, fórmulas matemáticas e infográficos sejam indexados com alta fidelidade semântica, aproximando a busca computacional da forma como um ser humano examina um documento visualmente \citeb{faysse2025colpali}.
 
-    Texto6 texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto5.
+Apesar do avanço no mapeamento visual de documentos, as implementações atuais de MRAG introduziram um novo desafio técnico associado ao ruído contextual. Como sistemas baseados no \textit{ColPali} costumam recuperar e enviar a captura da página inteira como contexto para o LLM gerar a resposta, o modelo gerador acaba sobrecarregado com informações irrelevantes contidas na mesma folha, tais como cabeçalhos, rodapés, números de página e parágrafos de assuntos adjacentes \citeb{faysse2025colpali}. Esse excesso de dados visuais desnecessários satura a janela de contexto da inteligência artificial e dispersa a atenção do mecanismo gerador, reabrindo margem para a ocorrência de alucinações semânticas. Torna-se imperativo, portanto, o desenvolvimento de estratégias de engenharia voltadas ao isolamento granular dos componentes visuais relevantes, limpando o contexto antes da fase de geração \citeb{faysse2025colpali}.
 
-    Texto7 texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto6.
+\section{Segmentação de Layout e Processamento de Documentos}
+\label{sec:segmentacao_layout}
 
-    Evite terminar seções, capítulos e etc com figura. Procure escrever mais.
+Para solucionar o problema do ruído contextual gerado pela captura de páginas inteiras, a Engenharia de Software e a Visão Computacional aplicam as técnicas de Análise de Layout de Documentos (\textit{Document Layout Analysis} - DLA) [Binmakhashen e Mahmoud, 2021]. Essa subárea estuda metodologias para fazer com que os algoritmos compreendam a estrutura geométrica e a organização lógica de um arquivo digital. Em vez de tratar o documento PDF como uma sequência linear de caracteres ou como uma imagem única e indivisível, as técnicas de DLA escaneiam a página para identificar e delimitar os componentes estruturais por meio de caixas envolventes, conhecidas como \textit{bounding boxes}. Esse mapeamento permite determinar as coordenadas bidimensionais exatas (X, Y) de cada bloco de informação, segmentando o arquivo em entidades lógicas independentes [Binmakhashen e Mahmoud, 2021].
 
-\section{Inserindo tabelas}\label{sec:tabelas}
-    
-    A Tabela \ref{tab:exemplo-1}... texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto. Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto.
-	
-	\begin{table}[!h]
-	\captionsetup{width=7cm}%Deixe da mesma largura que a tabela
-	\Caption{\label{tab:exemplo-1} Um Exemplo de tabela alinhada que pode ser longa ou curta}%
-	\IBGEtab{}{%
-		\begin{tabular}{ccc}
-			\toprule
-			Nome & Nascimento & Documento \\
-			\midrule \midrule
-			Maria da Silva & 11/11/1111 & 111.111.111-11 \\
-			Maria da Silva & 11/11/1111 & 111.111.111-11 \\
-			Maria da Silva & 11/11/1111 & 111.111.111-11 \\
-			\bottomrule
-		\end{tabular}%
-	}{%
-	\Fonte{o autor.}%
-	\Nota{esta é uma nota, que diz que os dados são baseados na
-		regressão linear.}%
-	\Nota[Anotações]{uma anotação adicional, seguida de várias outras.}%
-    }
-    \end{table}
+O avanço na precisão dessa segmentação foi impulsionado pelo surgimento de modelos de aprendizado profundo híbridos, com destaque para a família \textit{LayoutLM} [Xu et al., 2020]. Diferente das abordagens passadas que analisavam apenas o texto ou apenas a imagem de forma isolada, essa arquitetura provou matematicamente a necessidade de processar o conteúdo textual alinhado à sua respectiva posição espacial na página. Modelos mais recentes, como o \textit{LayoutLMv3}, consolidaram esse avanço ao unificar o aprendizado multimodal através de objetivos de pré-treinamento que consideram texto, imagem e a geometria do layout simultaneamente [Huang et al., 2022]. Essa tecnologia confere aos sistemas a capacidade de classificar com alta precisão a natureza de cada bloco detectado, separando com clareza elementos de descarte, como cabeçalhos e rodapés, de componentes de alto valor pedagógico, como tabelas, gráficos e caixas de texto explicativas [Huang et al., 2022].
 
-	%\begin{table}[h!]	
-	%	\centering
-	%	\Caption{\label{tab:exemplo-1} Exemplo de tabela}	
-	%	\UFCtab{}{
-	%		\begin{tabular}{cll}
-	%			\toprule
-	%			Ranking & Exon Coverage & Splice Site Support \\
-	%			\midrule \midrule
-	%			E1 & Complete coverage by a single transcript & Both splice sites\\
-	%			E2 & Complete coverage by more than a single transcript & Both splice sites\\
-	%			E3 & Partial coverage & Both splice sites\\
-	%			E4 & Partial coverage & One splice site\\
-	%			E5 & Complete or partial coverage & No splice sites\\
-	%			E6 & No coverage & No splice sites\\
-	%			\bottomrule
-	%		\end{tabular}
-	%	}{
-	%	\Fonte{elaborado pelo autor.}
-	%}
-	%\end{table}
-
-\subsection{Exemplo de subseção} \label{sec:ex_sec}
-	
-    Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto.
-
-    %acrlong{DATASUS},\acrlong{DNV},\acrlong{DO},\acrlong{ESF},\acrlong{IBGE},\acrlong{MFC},\acrlong{MI},\acrlong{MS},\acrlong{NV},\acrlong{ODM},\acrlong{OI},\acrlong{OMS},\acrlong{ONU},\acrlong{PNI},\acrlong{PSF},\acrlong{RIPSA},\acrlong{RN},\acrlong{SIM},\acrlong{SINASC},\acrlong{SUS},\acrlong{TMI},\acrlong{TMMFC}
-
-
-    \begin{alineascomponto}
-	    \item Integer non lacinia magna. Aenean tempor lorem tellus, non sodales nisl commodo ut
-	    \item Proin mattis placerat risus sit amet laoreet. Praesent sapien arcu, maximus ac fringilla efficitur, vulputate faucibus sem. Donec aliquet velit eros, sit amet elementum dolor pharetra eget
-	    \item Integer eget mattis libero. Praesent ex velit, pulvinar at massa vel, fermentum dictum mauris. Ut feugiat accumsan augue, et ultrices ipsum euismod vitae
-	    \begin{subalineascomponto}
-		    \item Integer non lacinia magna. Aenean tempor lorem tellus, non sodales nisl commodo ut
-		    \item Proin mattis placerat risus sit amet laoreet.
-	    \end{subalineascomponto}
-    \end{alineascomponto}
-
-\subsection{Uso de siglas} \label{sec:siglas}
-
-    Para utilizar siglas, primeiro defina a sigla no arquivo "lista-de-abreviaturas-e-siglas"~ dentro da pasta "1-pre-textuais" com o comando 
-    \begin{verbatim}
-        \newacronym{ABNT}{ABNT}{Associação Brasileira de Normas Técnicas}
-    \end{verbatim}
-    Depois chame a sigla com o comando:
-    \begin{verbatim}
-        \gls{ABNT}
-    \end{verbatim}
-    Fica assim: \gls{ABNT}. A primeira vez que o comando é usado para uma determinada sigla, aparece o significado por extenso da sigla com a sua abreviação em seguida. A partir da segunda vez que o comando para uma determinada sigla é usado, aparace apenas a sigla. Por exemplo: \gls{ABNT}.  
-    
-    Veja o código fonte de outros exemplos: Teste de siglas \gls{TEST}, outros exemplos de siglas: \gls{DA}, \gls{MCEG}. 
-    Repare que sempre as siglas estão sendo definidas primeiramente no arquivo ``lista-de-abreviaturas-e-siglas''.
+Uma vez identificadas e classificadas as coordenadas estruturais do documento, torna-se possível aplicar uma engenharia de processamento focada na filtragem cirúrgica dos dados. A partir da localização exata do elemento relevante determinada pelos modelos de DLA, o sistema executa uma operação de recorte digital — o \textit{cropping} —, isolando apenas o bloco de interesse e eliminando os ruídos visuais ao redor [Binmakhashen e Mahmoud, 2021]. Esse processo de refino e curadoria de layout garante que apenas o conteúdo estritamente necessário e livre de distrações textuais seja encapsulado e enviado para alimentar a janela de contexto do modelo gerador final. Desse modo, o casamento entre a busca visual avançada e os algoritmos de segmentação estrutural estabelece o alicerce técnico ideal para blindar o ecossistema contra alucinações conceituais no cenário educativo.
