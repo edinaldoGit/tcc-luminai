@@ -1,0 +1,121 @@
+\chapter{Trabalhos Relacionados}
+\label{sec:trabalhos-relacionados}
+
+Neste capítulo, são apresentados trabalhos recentes que abordam o problema da recuperação multimodal em documentos complexos, destacando os pontos de convergência com a presente proposta e as limitações que motivam o desenvolvimento do EDGAR.
+
+\section{ColPali: Efficient Document Retrieval with Vision Language Models}
+\label{sec:colpali}
+
+\citeonline{faysse2025colpali} propõem o ColPali, uma arquitetura de recuperação de documentos que substitui os tradicionais pipelines de extração de texto por um modelo de linguagem e visão (VLM) capaz de indexar páginas inteiras como representações visuais. O sistema opera por meio de um mecanismo de interação tardia (\textit{late interaction}), que compara vetores de \textit{patches} visuais da página com o vetor da consulta do usuário, eliminando a necessidade de OCR e reduzindo significativamente o custo de indexação. Essa abordagem demonstrou resultados competitivos em benchmarks de recuperação de documentos com layouts complexos, como tabelas e infográficos.
+
+Em comparação, o presente trabalho compartilha com o ColPali o reconhecimento de que elementos visuais são componentes fundamentais para a compreensão de documentos complexos e que abordagens puramente textuais são insuficientes para esse domínio. Contudo, o EDGAR se diferencia ao operar em uma granularidade significativamente mais fina: enquanto o ColPali trata a página inteira como unidade de recuperação, frequentemente introduzindo ruído visual irrelevante no contexto do modelo, o presente trabalho isola componentes estruturais específicos, como parágrafos, tabelas, figuras e legendas, preservando o elo pedagógico entre eles. Além disso, o foco do ColPali recai sobre a eficiência de recuperação em domínio aberto, ao passo que o EDGAR é orientado à estrutura semântica intrínseca dos materiais didáticos, em que a relação entre teoria e elemento visual constitui uma unidade de conhecimento indivisível.
+
+\section{LILaC: Late Interacting in Layered Component Graph for Open-domain Multimodal Multihop Retrieval}
+\label{sec:lilac}
+
+\citeonline{yun2025lilac} apresentam o LILaC, um framework de recuperação multimodal que estrutura documentos como grafos de componentes em camadas, interligando explicitamente parágrafos, tabelas e imagens por meio de arestas semânticas e estruturais. Essa representação em grafo permite que o sistema realize raciocínios que exigem o cruzamento de informações distribuídas em múltiplas páginas, alcançando alta precisão em tarefas de recuperação multimodal multi-salto (\textit{multihop}) em domínio aberto.
+
+O presente trabalho converge com o LILaC ao reconhecer que a relação entre os componentes de um documento, e não apenas o conteúdo isolado de cada um, é determinante para a qualidade da recuperação. Entretanto, o EDGAR se diferencia pela abordagem adotada para preservar essas relações. A construção de grafos de componentes combinada com a decomposição de consultas via LLMs impõe ao LILaC uma elevada carga computacional, tornando-o pouco viável para plataformas educacionais com recursos limitados. O presente trabalho propõe uma alternativa mais leve, baseada em pipelines de indexação híbrida que capturam a hierarquia estrutural do documento sem a sobrecarga da construção e manutenção de grafos complexos. Ademais, enquanto o LILaC foca no domínio aberto e científico, o EDGAR é especificamente orientado à estrutura pedagógica dos materiais didáticos em PDF, domínio cujas particularidades, como a relação direta entre enunciado, diagrama e exercício, não são contempladas pelo framework relacionado.
+
+\section{SLEUTH: Resolving Evidence Sparsity via Agentic Context Engineering for Long-Document Understanding}
+\label{sec:sleuth}
+
+\citeonline{liu2025resolving} propõem o SLEUTH, um framework baseado em engenharia de contexto agêntica para a compreensão de documentos longos. O sistema emprega múltiplos agentes de inteligência artificial colaborativos que refinam iterativamente a busca por evidências esparsas ao longo do documento, decompondo consultas complexas em sub-tarefas e consolidando os fragmentos recuperados em um contexto coerente para o modelo gerador. Essa abordagem demonstrou resultados expressivos em tarefas de compreensão que exigem raciocínio sobre evidências distribuídas em documentos extensos.
+
+Em comparação, o presente trabalho compartilha com o SLEUTH o objetivo de mitigar alucinações semânticas por meio de uma curadoria cuidadosa do contexto entregue ao modelo de linguagem, especialmente em documentos longos em que a dispersão da informação representa um risco para a qualidade da resposta gerada. No entanto, o EDGAR se distingue pela estratégia adotada para alcançar esse objetivo. A orquestração de múltiplos agentes impõe ao SLEUTH uma latência elevada e um custo computacional significativo, uma vez que cada consulta aciona um ciclo iterativo de decomposição e refinamento. O presente trabalho trata a curadoria do contexto como uma etapa estrutural do pipeline de indexação, e não como um processo reativo em tempo de consulta, minimizando os ruídos antes mesmo da fase de geração da resposta e reduzindo a dependência de recursos computacionais intensivos. Essa escolha arquitetural torna o EDGAR mais adequado ao cenário educacional, em que a viabilidade de implantação em plataformas com infraestrutura limitada é um requisito prático fundamental.
+
+\section{Análise Comparativa}
+\label{subsec:analise-comparativa}
+
+A Tabela \ref{tab:comparativo} sintetiza os principais eixos 
+de diferenciação entre os trabalhos relacionados e a 
+arquitetura proposta neste trabalho. Os critérios de 
+comparação foram selecionados com base nas dimensões mais 
+relevantes para o domínio educacional: a precisão da 
+recuperação, o custo computacional associado e a capacidade 
+de lidar com a estrutura multimodal e pedagógica dos 
+materiais didáticos em PDF.
+
+\begin{table}[htbp]
+\centering
+\caption{Análise comparativa dos trabalhos relacionados e o 
+presente trabalho.}
+\label{tab:comparativo}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Critério} & 
+\textbf{ColPali} & 
+\textbf{LILaC} & 
+\textbf{SLEUTH} & 
+\textbf{EDGAR} \\
+\midrule
+Granularidade de recuperação & 
+Página inteira & 
+Componente via grafo & 
+Trecho por agente & 
+Componente isolado \\
+
+Custo computacional & 
+Baixo & 
+Alto & 
+Alto & 
+Baixo \\
+
+Suporte a elementos visuais & 
+Sim & 
+Sim & 
+Parcial & 
+Sim \\
+
+Preserva relações entre componentes & 
+Não & 
+Sim & 
+Parcial & 
+Sim \\
+
+Orquestração de múltiplos agentes & 
+Não & 
+Não & 
+Sim & 
+Não \\
+
+Mitigação proativa de alucinações & 
+Não & 
+Não & 
+Não & 
+Sim \\
+
+Foco em domínio educacional & 
+Não & 
+Não & 
+Não & 
+Sim \\
+
+Requer OCR & 
+Não & 
+Sim & 
+Sim & 
+Sim \\
+\bottomrule
+\end{tabular}%
+}
+\fonte{Elaborado pelo autor (2025).}
+\end{table}
+
+A análise evidencia que, embora os trabalhos relacionados 
+apresentem contribuições relevantes para a recuperação 
+multimodal, nenhum deles concilia simultaneamente baixo 
+custo computacional, granularidade fina de recuperação e 
+sensibilidade à estrutura pedagógica dos documentos. O 
+ColPali, apesar de sua eficiência, opera em granularidade 
+de página inteira, o que frequentemente introduz ruído 
+visual no contexto do modelo. O LILaC e o SLEUTH alcançam 
+maior precisão, porém ao custo de uma arquitetura 
+computacionalmente intensiva, inviável para plataformas 
+educacionais com recursos limitados. O EDGAR propõe-se a 
+ocupar essa lacuna, combinando recuperação em nível de 
+componente isolado com baixo custo computacional e 
+mitigação proativa de alucinações, características 
+orientadas especificamente às demandas do domínio 
+educacional.
