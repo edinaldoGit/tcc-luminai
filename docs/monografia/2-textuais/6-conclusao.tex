@@ -1,17 +1,11 @@
 \chapter{Conclusões e Trabalhos Futuros}
 \label{chap:conclusoes-e-trabalhos-futuros}
 
-Parte final do texto na qual se apresentam as conclusões apoiadas no desenvolvimento do assunto. É a recapitulação sintética dos resultados obtidos. Pode apresentar recomendações e sugestões para pesquisas futuras.
+Este trabalho apresentou a concepção inicial do EDGAR, uma arquitetura de Geração Aumentada por Recuperação Multimodal voltada à consulta de documentos didáticos em PDF. A proposta foi motivada pela necessidade de tornar mais confiável a interação entre estudantes e sistemas baseados em modelos de linguagem, especialmente em cenários nos quais o conteúdo consultado envolve não apenas texto linear, mas também tabelas, diagramas, gráficos e demais elementos visuais relevantes para a compreensão do material.
 
-%\label{sec:contribuicoes-do-trabalho}
+No desenvolvimento do TCC I, foram consolidados os fundamentos teóricos relacionados a LLMs, alucinações semânticas, RAG, MRAG e análise de layout de documentos, além da análise de trabalhos recentes que evidenciam limitações ainda existentes na recuperação multimodal. A partir dessa base, foi definida a arquitetura do EDGAR, estruturada em fluxos offline e online, com o objetivo de separar as etapas de maior custo computacional daquelas executadas em tempo de consulta. Essa organização permite que o processamento prévio do documento produza unidades de informação mais específicas, associando conteúdo textual, recortes visuais e metadados geométricos para apoiar a geração de respostas mais contextualizadas.
 
+Como contribuição desta etapa, o trabalho estabelece uma proposta arquitetural orientada à granularidade fina, buscando preservar a relação entre os elementos pedagógicos presentes no documento e reduzir a inserção de ruídos no contexto fornecido ao modelo gerador. Embora a validação experimental ainda esteja prevista para o TCC II, a especificação apresentada fornece a base necessária para a implementação do motor EDGAR e sua integração ao Luminia Reader, interface web concebida para permitir a consulta interativa ao material didático e a visualização das evidências utilizadas na resposta.
 
-
-%\label{sec:limitacoes}
-
-
-
-
-
-
+Como trabalhos futuros, pretende-se implementar os pipelines de ingestão, indexação, recuperação e geração, definir os modelos e ferramentas que comporão a infraestrutura final, integrar o servidor EDGAR à interface Luminia Reader e conduzir os experimentos de validação. Essa avaliação deverá considerar tanto aspectos de desempenho, como latência e custo computacional, quanto aspectos semânticos, como precisão da recuperação, relevância da resposta e fidelidade ao contexto recuperado. Dessa forma, espera-se verificar a viabilidade técnica da arquitetura proposta e seu potencial de apoio a sistemas educacionais baseados em documentos didáticos multimodais.
 

@@ -106,7 +106,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \autor{Francisco Edinaldo dos Santos Silva}
-\titulo{EDGAr: Desenvolvimento de uma Arquitetura RAG Multimodal para Consulta de Documentos Didáticos em PDF}
+\titulo{EDGAR: Desenvolvimento de uma Arquitetura MRAG de Granularidade Fina Voltada para Documentos Didáticos em PDF}
 \data{2026}
 \local{Quixadá}
 
@@ -162,6 +162,12 @@
 
 \newcommand{\citeb}[1]{(\citeauthoronline{#1}, \citeyear{#1})}
 \newcommand{\citebp}[2]{(\citeauthoronline{#1}, \citeyear{#1}, p.~#2)}
+\newcommand{\citebdois}[2]{(\citeauthoronline{#1}, \citeyear{#1}; \citeauthoronline{#2}, \citeyear{#2})}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta, fit, backgrounds}
+
+\usepackage{float}
 
 \begin{document}	
 
@@ -182,8 +188,8 @@
 	%\imprimirlistadequadros
 	%\imprimirlistadealgoritmos
 	%\imprimirlistadecodigosfonte
-	\imprimirlistadeabreviaturasesiglas
-	\imprimirlistadesimbolos{1-pre-textuais/lista-de-simbolos}   
+	%\imprimirlistadeabreviaturasesiglas
+	%\imprimirlistadesimbolos{1-pre-textuais/lista-de-simbolos}   
 	\imprimirsumario
 	
 	\setcounter{table}{0}% Deixe este comando antes da primeira tabela.
@@ -193,9 +199,9 @@
 	\input{2-textuais/1-introducao}
 	\input{2-textuais/2-fundamentacao-teorica}
 	\input{2-textuais/3-trabalhos-relacionados}
-	%\input{2-textuais/4-metodologia}
-	%\input{2-textuais/5-resultados-preliminares}
-	%\input{2-textuais/6-conclusao}
+	\input{2-textuais/4-metodologia}
+	\input{2-textuais/5-resultados-preliminares}
+	\input{2-textuais/6-conclusao}
 	
 	%Elementos pós-textuais	
 	\bibliography{3-pos-textuais/referencias}
