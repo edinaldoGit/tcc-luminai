@@ -1,18 +1,28 @@
 \chapter{Resultados preliminares}
 \label{chap:resultados-preliminares}
 
-\section{Resultados do Motor de Dados (EDGAR)}
+\section{Resultados preliminares da arquitetura EDGAR}
 \label{sec:preliminares_edgar}
 
+Nesta etapa do trabalho, os resultados preliminares concentram-se na especificação arquitetural do EDGAR e na definição dos artefatos necessários para sua implementação e avaliação experimental. Como a proposta ainda se encontra em fase de concepção e planejamento metodológico, os resultados apresentados referem-se principalmente à organização dos fluxos, à delimitação dos módulos computacionais e à estrutura esperada para os dados intermediários produzidos pela arquitetura.
+
+Entre os principais resultados preliminares da arquitetura EDGAR, destacam-se:
+
 \begin{itemize}
-    \item \textbf{Segmentação e Análise de Layout de Documentos (DLA):} Apresentação de uma figura demonstrando a aplicação prática do modelo de visão computacional sobre uma página de um artigo ou livro didático, evidenciando os delimitadores espaciais (\textit{bounding boxes}) isolando blocos de texto, tabelas e elementos gráficos.
-    \item \textbf{Extração e Estruturação de Metadados:} Exibição do fragmento de código contendo o \textit{payload} JSON gerado pelo pipeline \textit{offline}, comprovando a capacidade do EDGAR de indexar o conteúdo textual associado às suas respectivas coordenadas geométricas de pixels e numeração de páginas.
+    \item \textbf{Segmentação e análise de layout de documentos:} definição do uso de modelos de Análise de Layout de Documentos (DLA) para identificação de regiões estruturais em páginas PDF, como blocos de texto, tabelas, figuras, fórmulas e elementos gráficos. Essa etapa deverá produzir \textit{bounding boxes} associadas a classes e índices de confiança, permitindo o isolamento dos componentes documentais em granularidade fina.
+
+    \item \textbf{Estruturação de metadados documentais:} definição do formato dos metadados associados aos componentes extraídos, incluindo identificador do documento, número da página, classe do elemento, coordenadas geométricas, texto extraído, descrição visual e referência ao recorte correspondente. Essa estrutura servirá como base para a indexação vetorial, a recuperação de evidências e a posterior visualização dos componentes na aplicação cliente.
 \end{itemize}
 
-\section{Protótipo da Interface Cliente (Luminia Reader)}
-\label{sec:preliminares_luminia}
+\section{Protótipo da aplicação cliente LuminIA Reader}
+\label{sec:preliminares_luminia_reader}
+
+Como artefato de apoio à demonstração e validação prática da arquitetura EDGAR, foi prevista a utilização do LuminIA Reader como aplicação cliente. No escopo deste trabalho, o protótipo não constitui o foco principal da pesquisa, mas permite representar a forma como o estudante poderá interagir com a arquitetura, submetendo documentos, enviando perguntas e visualizando as respostas acompanhadas das evidências recuperadas.
+
+Entre os resultados preliminares relacionados à aplicação cliente, destacam-se:
 
 \begin{itemize}
-    \item \textbf{Ambiente Integrado de Estudos:} Planejamento de figura contendo o protótipo de alta fidelidade da tela principal do leitor de PDF com o painel lateral de tutoria por IA de dados simulados.
-    \item \textbf{Mecanismo de Destaque Geométrico:} Planejamento de figura demonstrando o comportamento visual da interface ao interpretar as coordenadas do JSON, aplicando o sombreamento colorido sobre o componente correspondente no documento para guiar o estudante.
+    \item \textbf{Ambiente de leitura e consulta:} definição de uma interface web composta por um leitor de PDF e um painel lateral de tutoria, no qual o estudante poderá submeter perguntas sobre o material didático e visualizar as respostas retornadas pelo EDGAR.
+
+    \item \textbf{Visualização de evidências no documento:} definição do mecanismo de destaque visual dos componentes recuperados, utilizando os metadados geométricos retornados pela arquitetura EDGAR para indicar, no próprio PDF, a região documental associada à resposta gerada.
 \end{itemize}

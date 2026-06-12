@@ -1,7 +1,7 @@
 1. Contexto de Aplicação e Arquitetura do Sistema
-O EDGAr foi projetado para atuar como o motor de inteligência de back-end do Luminia Reader, um leitor de PDFs baseado na web. O ecossistema opera sob o modelo cliente-servidor:
+O EDGAr foi projetado para atuar como o motor de inteligência de backend do LuminIA Reader, um leitor de PDFs baseado na web. O ecossistema opera sob o modelo cliente-servidor:
 
-Frontend (Luminia Reader Web): Uma interface em execução no navegador do usuário, responsável pela renderização do PDF, captura das dúvidas dos estudantes e exibição das respostas integradas aos elementos visuais originais.
+Frontend (LuminIA Reader Web): Uma interface em execução no navegador do usuário, responsável pela renderização do PDF, captura das dúvidas dos estudantes e exibição das respostas integradas aos elementos visuais originais.
 
 Backend (Servidor EDGAr): O pipeline de engenharia de dados onde ocorrem as etapas de busca em espaço visual, Análise de Layout de Documentos (DLA), cálculo de coordenadas geométricas, recorte digital (cropping) do componente relevante e orquestração do modelo de linguagem.
 
@@ -74,7 +74,7 @@ Tópicos a abordar:
 
 A natureza do sistema como um pipeline de engenharia de dados baseado em inferência e aprendizado em contexto (in-context learning).
 
-Divisão Cliente-Servidor: As atribuições do Frontend web (Luminia Reader) e do Backend processador (EDGAr).
+Divisão Cliente-Servidor: As atribuições do Frontend web (LuminIA Reader) e do Backend processador (EDGAr).
 
 A separação temporal crítica do ciclo de vida dos dados: Processamento Assíncrono (Offline / Tempo de Ingestão) versus Processamento Síncrono (Online / Tempo de Consulta).
 
@@ -110,7 +110,7 @@ Elementos Visuais Planejados:
 Tópicos a abordar: A execução híbrida do pipeline. Como o sistema extrai o texto de forma direta via metadados nativos se o componente original for digital, ou como ele aciona o motor de OCR estritamente em cima do retângulo recortado se for escaneado. Vantagens na redução de erros de leitura de tabelas e equações espalhadas.
 
 4.2.5 Fase 5: Vetorização e Indexação Multimodal Híbrida
-Tópicos a abordar: A transformação de blocos visuais e textuais em embeddings. A estrutura de armazenamento no banco de dados vetorial, correlacionando os vetores semânticos com os metadados de localização física na página original do PDF. A paralelização com o índice visual do modelo de linguagem e visão (VLM) para as páginas completas.
+Tópicos a abordar: A transformação de blocos visuais e textuais em \textit{embeddings}. A estrutura de armazenamento no banco de dados vetorial, correlacionando os vetores semânticos com os metadados de localização física na página original do PDF. A paralelização com o índice visual do modelo de linguagem e visão (VLM) para as páginas completas.
 
 Elementos Visuais Planejados:
 
