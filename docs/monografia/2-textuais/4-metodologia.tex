@@ -1,18 +1,20 @@
 \chapter{Metodologia}
 \label{chap:metodologia}
 
-Este capítulo apresenta a abordagem metodológica adotada para a concepção, estruturação e avaliação da arquitetura EDGAR. Inicialmente, são descritas as premissas arquiteturais que orientam a proposta, incluindo a separação entre as etapas de preparação documental e de atendimento às consultas do usuário. Em seguida, são definidos os componentes tecnológicos utilizados na implementação, bem como os fluxos de processamento responsáveis pela ingestão, indexação, recuperação e organização das evidências extraídas de documentos didáticos em PDF. Por fim, apresenta-se o planejamento experimental elaborado para avaliar a viabilidade técnica da arquitetura e sua integração com a aplicação cliente LuminIA Reader.
+Este capítulo apresenta a metodologia de implementação e o plano de avaliação da arquitetura proposta. A Seção~\ref{sec:visao_geral_arquitetura_edgar} apresenta a topologia do sistema e sua divisão em fluxos operacionais. A Seção~\ref{sec:definicao_componentes_tecnologicos} detalha as tecnologias adotadas para atender aos requisitos da arquitetura. Nas seções subsequentes, são mapeadas as etapas de engenharia de dados do fluxo assíncrono de ingestão, as fases de inferência do fluxo síncrono de recuperação e, por fim, o protocolo de validação experimental.
 
 \section{Visão geral da arquitetura EDGAR}
 \label{sec:visao_geral_arquitetura_edgar}
 
-A arquitetura proposta neste trabalho foi concebida como uma abordagem de Geração Aumentada por Recuperação Multimodal em granularidade fina, voltada ao processamento e à consulta de documentos didáticos em PDF. Do ponto de vista metodológico, sua construção será organizada como um \textit{pipeline} de engenharia de dados e contexto, sem necessidade de treinamento adicional (\textit{training-free}) ou ajuste fino (\textit{fine-tuning}) dos modelos utilizados. Assim, a proposta concentra-se na articulação de componentes previamente disponíveis, como modelos de análise de layout, mecanismos de extração textual, modelos de descrição visual, técnicas de vetorização e modelos de linguagem geradores.
+A arquitetura EDGAR deve operar como um \textit{pipeline} de processamento de dados projetado para desacoplar as etapas de curadoria documental da interação em tempo real com o usuário. Operacionalmente, o sistema não exige treinamento adicional (\textit{training-free}), funcionando por meio da orquestração de modelos de visão, extração e linguagem em uma topologia modular. 
 
-Para viabilizar a interação do usuário com o sistema, será utilizado o LuminIA Reader como aplicação cliente de apoio. No escopo deste trabalho, essa aplicação não constitui o objeto principal da pesquisa, mas atua como meio de submissão dos documentos, envio das perguntas e visualização das respostas e evidências retornadas pela arquitetura. Dessa forma, o LuminIA Reader funciona como uma camada de demonstração e validação prática da proposta, enquanto o foco metodológico permanece nos módulos de ingestão, indexação, recuperação e geração.
+Para mitigar a latência durante as consultas, o sistema divide-se logicamente em dois fluxos operacionais:
+\begin{enumerate}
+    \item \textbf{Fluxo assíncrono de ingestão e indexação (\textit{offline}):} Concentra a carga computacional pesada. É responsável por receber o documento PDF, realizar a segmentação visual de seus componentes, gerar transcrições e descrições semânticas, e armazenar as representações vetoriais juntamente com seus metadados espaciais.
+    \item \textbf{Fluxo síncrono de recuperação e geração (\textit{online}):} Atua estritamente sob demanda. Acionado exclusivamente quando uma consulta é realizada, esse fluxo responsabiliza-se por vetorizar a entrada do usuário, recuperar as evidências em granularidade fina, formatar o contexto e executar a inferência no modelo gerador.
+\end{enumerate}
 
-De maneira geral, o fluxo de uso inicia-se com o envio de um documento didático em PDF por meio da aplicação cliente. Esse documento é encaminhado à camada de processamento da arquitetura, responsável por realizar a segmentação, o enriquecimento semântico e a indexação dos componentes documentais. Posteriormente, quando o usuário submete uma pergunta, o sistema recupera os componentes mais relevantes, organiza as evidências em um contexto de entrada para o modelo gerador e retorna uma resposta acompanhada dos metadados necessários para a visualização da evidência no documento original.
-
-Internamente, a arquitetura será organizada em dois fluxos principais. O primeiro corresponde ao fluxo assíncrono de ingestão e indexação, responsável por preparar previamente o documento, convertendo páginas em imagens, identificando regiões estruturais, recortando componentes, extraindo texto, gerando descrições visuais e armazenando representações vetoriais com metadados geométricos. O segundo corresponde ao fluxo síncrono de recuperação e geração, acionado no momento da consulta do usuário, no qual a pergunta é vetorizada, as evidências são recuperadas, o contexto é estruturado e a resposta é produzida pelo modelo gerador. A Figura~\ref{fig:pipeline_edgar} sintetiza esse funcionamento, apresentando de forma integrada tanto o fluxo geral de uso da arquitetura quanto a organização interna de seus módulos assíncronos e síncronos.
+A interação com o usuário ocorre por meio da aplicação cliente LuminIA Reader. No contexto desta arquitetura, ela é responsável pelo envio de arquivos, pela submissão de consultas e pela renderização das respostas e das coordenadas espaciais retornadas pelo fluxo síncrono. Como se trata de um componente instrumental de suporte à validação e não do escopo científico principal desta pesquisa, seus detalhes de engenharia de \textit{software}, camadas arquiteturais e fluxos de estados internos encontram-se documentados no Apêndice~\ref{ap:luminia-reader}. A Figura~\ref{fig:pipeline_edgar} ilustra a topologia citada, evidenciando a integração entre os fluxos operacionais da arquitetura e a aplicação cliente.
 
 \begin{figure}[ht]
 \centering
@@ -26,12 +28,10 @@ Internamente, a arquitetura será organizada em dois fluxos principais. O primei
 \end{minipage}
 \end{figure}
 
-Essa separação entre preparação documental e atendimento à consulta busca concentrar as etapas mais custosas no fluxo assíncrono, reduzindo o processamento necessário durante a interação do estudante. A partir dessa organização, as seções seguintes apresentam os componentes tecnológicos definidos para a arquitetura e detalham as fases que compõem seus fluxos assíncrono e síncrono.
-
 \section{Definição dos componentes tecnológicos}
 \label{sec:definicao_componentes_tecnologicos}
 
-A partir da organização arquitetural apresentada na Figura~\ref{fig:pipeline_edgar}, foram definidos os principais componentes tecnológicos utilizados na arquitetura EDGAR e em sua comunicação com a aplicação cliente LuminIA Reader. A seleção dessas tecnologias considerou critérios como disponibilidade em código aberto, compatibilidade com execução em ambiente de nuvem, integração com aplicações web e adequação ao processamento de documentos didáticos em PDF. A Tabela~\ref{tab:componentes-tecnologicos} sintetiza os módulos que compõem a base tecnológica da proposta.
+A arquitetura exige ferramentas capazes de atuar sobre matrizes de imagens, extração de \textit{strings}, inferência de redes neurais e cálculos de similaridade vetorial. A Tabela~\ref{tab:componentes-tecnologicos} mapeia as tecnologias de código aberto selecionadas para compor as fases de processamento do sistema e sua camada de aplicação cliente.
 
 \begin{table}[H]
 \centering
@@ -94,126 +94,121 @@ Interface web
 \legend{Fonte: Elaborado pelo autor.}
 \end{table}
 
-\subsection{Justificativa das tecnologias adotadas}
+\subsection{Justificativa operacional das tecnologias adotadas}
 
-A escolha dos componentes apresentados na Tabela~\ref{tab:componentes-tecnologicos} foi orientada pela aderência de cada recurso às necessidades específicas da arquitetura EDGAR e à sua integração com a aplicação cliente LuminIA Reader. A seguir, são apresentadas as justificativas técnicas para os módulos adotados.
+A adoção das ferramentas listadas na Tabela~\ref{tab:componentes-tecnologicos} baseia-se na capacidade de cada tecnologia em atender aos requisitos de processamento de dados do \textit{pipeline}, garantindo a interoperabilidade entre as etapas visuais e semânticas.
 
 \begin{itemize}
 
-    \item \textbf{Conversão de PDF para imagem:}
-    A escolha do PyMuPDF justifica-se por sua capacidade de converter páginas PDF em imagens rasterizadas com controle de resolução, além de permitir o acesso programático à estrutura interna do documento. Essa característica é relevante para o EDGAR, pois a etapa de normalização visual precisa preservar a correspondência entre o arquivo original, o número da página, a imagem gerada e as coordenadas utilizadas nas fases posteriores de análise de layout e isolamento de componentes. A resolução inicial de 300 DPI foi adotada como ponto de equilíbrio entre fidelidade visual e custo computacional, podendo ser ajustada conforme os resultados observados nas etapas de detecção de layout e OCR seletivo. Além disso, o uso do PyMuPDF favorece a integração entre conversão visual e extração textual em documentos digitais, reduzindo a necessidade de dependências externas adicionais no primeiro estágio do \textit{pipeline}.
+    \item \textbf{PyMuPDF:} Adotado para a renderização inicial das páginas (Fase 1) e para a extração primária de texto (Fase 4). Operacionalmente, sua escolha justifica-se pela capacidade de expor coordenadas espaciais precisas do texto digital, permitindo a correlação matemática exata entre os recortes da imagem rasterizada e as \textit{strings} subjacentes do arquivo PDF.
 
-    \item \textbf{Análise de layout de documentos:}
-    A escolha do DocLayout-YOLO justifica-se por sua especialização na detecção visual de estruturas documentais e por sua adequação a cenários que exigem equilíbrio entre precisão e desempenho computacional. No presente trabalho, esse módulo é responsável por identificar os elementos estruturais da página e gerar \textit{bounding boxes} associadas a rótulos de classe e índices de confiança. Esses dados constituem a base geométrica para o isolamento dos blocos detectados, a extração textual localizada e a posterior associação entre evidências visuais, conteúdo textual e metadados de recuperação. Além disso, por operar sobre a imagem renderizada da página, o modelo mantém compatibilidade tanto com PDFs digitais quanto com documentos escaneados, preservando a premissa de normalização visual adotada no fluxo de ingestão.
+    \item \textbf{DocLayout-YOLO:} Selecionado para a etapa de detecção geométrica (Fase 2). Ao contrário de abordagens multimodais pesadas, a escolha do YOLO atende ao requisito de alta velocidade de inferência na delimitação de componentes (\textit{bounding boxes}). A independência de uma etapa prévia de OCR torna-o ideal para processar assincronamente grandes volumes de páginas renderizadas.
 
-    \item \textbf{Isolamento geométrico:}
-    A escolha do OpenCV justifica-se por sua maturidade como biblioteca de visão computacional e por sua integração direta com estruturas matriciais de imagem em Python. No EDGAR, esse módulo utiliza as coordenadas das \textit{bounding boxes} geradas pela análise de layout para recortar regiões de interesse da página renderizada, produzindo componentes isolados. Esses artefatos intermediários são essenciais para a extração textual localizada, para a associação entre evidências visuais e metadados geométricos e para a posterior renderização das regiões recuperadas na interface LuminIA Reader. Além disso, o OpenCV oferece recursos adicionais de pré-processamento, como redimensionamento, conversão de espaço de cor e filtragem, que podem auxiliar na preparação dos componentes para OCR e validação visual.
+    \item \textbf{OpenCV:} Utilizado como motor de manipulação matricial (Fase 3). Sua função é receber as coordenadas cartesianas geradas pelo modelo YOLO e realizar recortes lógicos sobre as imagens base. A biblioteca atende ao requisito de preparar os artefatos isolados sem perda de resolução, viabilizando o processamento isolado pelas redes neurais subsequentes.
 
-    \item \textbf{Extração textual localizada:}
-    A escolha combinada do PyMuPDF e do Tesseract OCR justifica-se pela necessidade de tratar documentos PDF com diferentes características de origem. Em PDFs digitais, o PyMuPDF permite acessar diretamente a camada textual do documento e recuperar palavras ou blocos associados a posições específicas da página, possibilitando a extração apenas do conteúdo contido nas coordenadas do componente detectado. Em documentos escaneados ou em regiões sem texto digital acessível, o Tesseract OCR será aplicado de forma seletiva sobre o recorte visual previamente isolado. Essa estratégia híbrida evita a aplicação indiscriminada de OCR sobre páginas inteiras, reduz o custo computacional e contribui para preservar a correspondência entre componente visual, conteúdo textual e metadados geométricos.
+    \item \textbf{Tesseract OCR:} Implementado como mecanismo de contingência (\textit{fallback}) na extração de texto (Fase 4). Sua adoção operacional visa garantir a captura de texto em documentos escaneados ou em componentes visuais complexos que não possuem camada de texto acessível via PyMuPDF.
     
-    \item \textbf{Descrição visual de componentes:}
-    A escolha do Qwen2.5-VL-7B-Instruct justifica-se pela necessidade de representar semanticamente elementos visuais cujo conteúdo não pode ser plenamente capturado apenas por extração textual ou OCR. Em materiais didáticos, gráficos, diagramas, figuras, esquemas e algumas tabelas podem transmitir informações relevantes por meio de relações espaciais, formas, setas, agrupamentos e organização visual. No EDGAR, esse modelo será aplicado no fluxo assíncrono sobre os recortes previamente isolados, gerando descrições textuais estruturadas desses elementos. Essas descrições complementam o texto extraído do documento e são posteriormente vetorizadas e indexadas no banco vetorial. Dessa forma, o modelo gerador utilizado no fluxo síncrono pode responder às consultas do estudante com apoio em uma representação textual enriquecida dos elementos visuais, sem a necessidade de processar imagens diretamente no momento da consulta.
+    \item \textbf{Qwen2.5-VL-7B-Instruct:} Integrado ao \textit{pipeline} assíncrono (Fase 5) para atuar exclusivamente sobre recortes visuais cujas relações semânticas são invisíveis a extratores tradicionais. A escolha desse modelo específico fundamenta-se em sua capacidade instrucional de traduzir relações espaciais de tabelas, eixos de gráficos e arranjos de fórmulas matemáticas em texto estruturado formatado nativamente para indexação.
 
-    \item \textbf{Banco de dados vetorial:}
-    A escolha do Qdrant justifica-se por sua adequação a cenários de recuperação semântica que dependem da associação entre vetores e metadados estruturados. No EDGAR, cada componente extraído do documento precisa ser armazenado juntamente com informações como identificador do arquivo, número da página, classe do elemento, coordenadas geométricas e referência ao recorte visual correspondente. O suporte a \textit{payloads} e filtros permite combinar a busca vetorial com critérios estruturais, favorecendo a recuperação das evidências necessárias tanto para a geração da resposta quanto para a renderização visual posterior na interface LuminIA Reader. Além disso, a possibilidade de execução em ambiente de servidor contribui para a integração do Qdrant ao arranjo cliente-servidor proposto.
+    \item \textbf{BGE-M3 (Sentence Transformers):} Designado como o modelo unificado de vetorização (Fase 6 e Fase 7). Sua implementação atende à exigência de criar representações densas multilíngues com suporte a comprimentos variados de entrada, garantindo que fragmentos textuais curtos, descrições extensas geradas por VLM e perguntas diretas do usuário habitem o mesmo espaço vetorial de busca.
 
-    \item \textbf{Vetorização textual:}
-    A escolha do BGE-M3, utilizado por meio da biblioteca Sentence Transformers, justifica-se por sua adequação a tarefas de recuperação semântica multilíngue e por sua compatibilidade com entradas textuais em diferentes níveis de granularidade. No EDGAR, os textos submetidos à vetorização incluem tanto o conteúdo extraído dos componentes por meio do PyMuPDF ou do OCR quanto as descrições visuais geradas para figuras, gráficos, diagramas e demais elementos não textuais. Dessa forma, o uso de um modelo de \textit{embeddings} multilíngue favorece a representação semântica integrada desses fragmentos e permite comparar a pergunta do estudante com os componentes indexados no banco vetorial. A biblioteca Sentence Transformers, por sua vez, oferece uma interface programática consolidada para a geração de \textit{embeddings} e a integração com mecanismos de busca semântica.
+    \item \textbf{Qdrant:} Adotado como infraestrutura de armazenamento e busca vetorial. A justificativa técnica para seu uso reside em seu suporte otimizado a consultas híbridas. O EDGAR depende nativamente da capacidade de anexar metadados em formato JSON (\textit{payloads}) aos \textit{embeddings}, recurso que o Qdrant oferece em tempo real, permitindo cruzar a similaridade do cosseno com restrições por identificador de documento e classe de componente.
 
-   \item \textbf{Interface web:}
-    A escolha do Vue.js e do PDF.js justifica-se pela necessidade de construir uma aplicação cliente interativa, capaz de mediar a comunicação entre o estudante e a arquitetura EDGAR. O Vue.js permite organizar a interface do LuminIA Reader em componentes reativos, como visualizador do documento, painel de perguntas, área de respostas e camada de destaque das evidências. O PDF.js, por sua vez, viabiliza a renderização de documentos PDF diretamente no navegador, permitindo controlar a página exibida, a escala de visualização e a sobreposição de elementos gráficos. Essa combinação favorece a implementação do mecanismo de visualização de evidências, no qual as coordenadas geométricas retornadas pela arquitetura são utilizadas para destacar visualmente o componente recuperado no material didático.
+   \item \textbf{Vue.js e PDF.js:} Definidos para orquestrar a camada de apresentação do LuminIA Reader. A escolha combinada atende ao requisito de mapeamento reativo: enquanto o Vue.js manipula o estado do painel de respostas via chamadas de API, o PDF.js permite renderizar o documento no navegador e transpor as coordenadas geométricas retornadas pelo EDGAR diretamente sobre o canvas visual, destacando a evidência correta para o estudante.
 
 \end{itemize}
-
-A definição desses componentes permite delimitar uma base tecnológica coerente com os requisitos da arquitetura proposta, mantendo alinhamento com a premissa de uso de ferramentas abertas e com a separação entre processamento documental, recuperação semântica e interação com o usuário. Embora ajustes pontuais possam ocorrer durante a implementação, a organização apresentada estabelece os módulos necessários para viabilizar o fluxo de dados em granularidade fina no EDGAR, bem como sua comunicação com a interface LuminIA Reader para leitura, consulta, visualização de evidências e validação prática do sistema.
 
 \section{Fluxo assíncrono de ingestão e indexação}
 \label{sec:fluxo_assincrono_ingestao_indexacao}
 
-O fluxo assíncrono de ingestão e indexação, também referido como fluxo \textit{offline}, corresponde à etapa responsável por transformar documentos didáticos em PDF em uma base de conhecimento estruturada, composta por fragmentos textuais, recortes visuais e metadados geométricos. Esse processamento é executado em segundo plano após o envio do arquivo pela aplicação cliente LuminIA Reader, permitindo que as etapas de maior custo computacional sejam realizadas antes das consultas do usuário. Dessa forma, o fluxo síncrono de recuperação e geração pode concentrar-se na busca das evidências previamente indexadas e na elaboração da resposta. O fluxo assíncrono é composto por seis fases consecutivas e interdependentes, descritas nas subseções seguintes.
+O fluxo assíncrono de ingestão e indexação (\textit{offline}) opera como o primeiro estágio do \textit{pipeline} de dados da arquitetura. Ele é encarregado de processar os documentos didáticos submetidos pela aplicação cliente e transformá-los em uma base de conhecimento multimodal, estruturada em unidades de granularidade fina. A execução em segundo plano visa garantir que as etapas computacionalmente mais custosas, como inferência visual e geração de \textit{embeddings}, sejam finalizadas antes de qualquer interação do usuário.
+
+Esse fluxo é arquitetado em seis fases sequenciais, formatadas sob o paradigma de engenharia de dados, nas quais a saída de um módulo atua estritamente como a entrada do módulo subsequente.
 
 \subsection{Fase 1: Unificação visual e normalização de entrada}
 \label{subsec:fase1_unificacao_visual}
 
-A etapa inicial do \textit{pipeline} dedica-se à padronização da entrada documental. Materiais didáticos em PDF podem apresentar diferentes características de origem, incluindo arquivos digitais com camada textual selecionável e documentos escaneados compostos apenas por imagens. Para reduzir essa heterogeneidade e permitir que os módulos seguintes operem sobre uma representação visual comum, o EDGAR utiliza o PyMuPDF para converter cada página do PDF em uma imagem rasterizada.
-
-A conversão será realizada inicialmente em 300 DPI, valor adotado como ponto de equilíbrio entre fidelidade visual e custo computacional, podendo ser ajustado conforme os resultados observados nas etapas de análise de layout e extração textual localizada. Como saída desta fase, cada página passa a possuir uma imagem correspondente, associada ao identificador do documento, ao número da página e às dimensões utilizadas como referência para as coordenadas geométricas empregadas nas etapas seguintes.
+\begin{itemize}
+    \item \textbf{Entrada:} Arquivo PDF bruto, contendo páginas que podem mesclar camadas de texto digital e regiões escaneadas.
+    \item \textbf{Processamento:} O arquivo é processado pelo módulo PyMuPDF, que realiza a renderização e padronização visual de todas as páginas. A conversão é fixada operacionalmente na resolução de 300 DPI, valor mapeado como o ponto de equilíbrio ótimo entre a preservação de detalhes geométricos essenciais e o custo computacional de processamento de matrizes.
+    \item \textbf{Saída:} Uma coleção de imagens rasterizadas (uma por página), indexadas pelos metadados fundamentais do documento original (identificador do arquivo, número da página e dimensões de largura e altura).
+\end{itemize}
 
 \subsection{Fase 2: Análise de layout de documentos (DLA)}
 \label{subsec:fase2_analise_layout}
 
-Com as páginas convertidas em imagens padronizadas, o EDGAR aciona o módulo de Análise de Layout de Documentos, do inglês \textit{Document Layout Analysis} (DLA). Essa etapa utiliza o DocLayout-YOLO para detectar, classificar e delimitar regiões estruturais presentes na página, como blocos textuais, tabelas, figuras, legendas, fórmulas matemáticas e caixas de destaque.
-
-A entrada corresponde à imagem renderizada da página, enquanto a saída consiste em um conjunto de elementos detectados, cada um associado a uma classe, a um índice de confiança e a uma \textit{bounding box}. Essas caixas são representadas por coordenadas que indicam seus limites nos eixos X e Y. Esse mapeamento espacial constitui a base para a recuperação em granularidade fina, pois permite que o documento deixe de ser tratado como uma página indivisível e passe a ser organizado em componentes estruturais independentes.
+\begin{itemize}
+    \item \textbf{Entrada:} Imagens rasterizadas geradas na Fase 1.
+    \item \textbf{Processamento:} As matrizes visuais são submetidas à inferência do modelo DocLayout-YOLO. A rede neural realiza a detecção estritamente visual das topologias da página, classificando os componentes lógicos de acordo com suas categorias estruturais (como \textit{plain\_text}, \textit{title}, \textit{table}, \textit{figure}, \textit{isolate\_formula}, entre outros).
+    \item \textbf{Saída:} Um conjunto de artefatos lógicos contendo o rótulo da classe detectada, o índice estatístico de confiança da predição e, criticamente, as coordenadas espaciais que delimitam o elemento na página (\textit{bounding boxes} mapeadas nos eixos cartesianos X e Y).
+\end{itemize}
 
 \subsection{Fase 3: Isolamento geométrico de componentes (\textit{cropping})}
 \label{subsec:fase3_isolamento_geometrico}
 
-A terceira fase realiza o isolamento geométrico dos componentes identificados pela análise de layout. A partir das \textit{bounding boxes} geradas na etapa anterior, o EDGAR utiliza o OpenCV para recortar regiões de interesse diretamente sobre a imagem renderizada da página. Esse procedimento produz imagens menores, correspondentes aos elementos detectados, como tabelas, figuras, trechos textuais ou caixas explicativas.
-
-O objetivo desta fase é reduzir a presença de ruídos visuais e textuais adjacentes, como cabeçalhos, rodapés, números de página ou conteúdos paralelos que compartilham a mesma folha. Como resultado, cada região isolada passa a constituir uma unidade documental indexável, preservando sua relação com o documento de origem, o número da página e as coordenadas utilizadas para sua localização. Esses recortes também poderão ser empregados posteriormente tanto na extração textual localizada quanto na visualização das evidências na interface LuminIA Reader.
+\begin{itemize}
+    \item \textbf{Entrada:} Matrizes de imagem (Fase 1) mapeadas contra as coordenadas geométricas delimitadas (\textit{bounding boxes} da Fase 2).
+    \item \textbf{Processamento:} O OpenCV é acionado para aplicar operações de recorte matricial direto. Nesta etapa, componentes avaliados como ruído estrutural (artefatos classificados como \textit{abandon}, abrangendo cabeçalhos e numerações de página) são descartados. Simultaneamente, componentes lógicos de legenda (\texttt{figure\_caption} e \texttt{table\_caption}) são preservados e submetidos a um cálculo de proximidade espacial. O sistema mede a distância entre centroides para vincular geometricamente cada legenda à figura ou tabela correspondente mais próxima na mesma página.
+    \item \textbf{Saída:} Imagens menores e isoladas correspondentes a cada componente válido da página. Os artefatos de legenda recebem a injeção de um metadado estrutural adicional no seu \textit{payload}, denominado \texttt{componente\_pai}, preservando a hierarquia visual para as fases subsequentes de extração, indexação e engenharia de contexto.
+\end{itemize}
 
 \subsection{Fase 4: Extração textual localizada (OCR seletivo)}
 \label{subsec:fase4_ocr_localizado}
 
-Após o isolamento dos componentes, o \textit{pipeline} realiza a extração textual de forma localizada. Essa fase adota uma estratégia híbrida, combinando PyMuPDF e Tesseract OCR conforme a natureza do arquivo processado. Em PDFs digitais com camada textual acessível, o PyMuPDF é utilizado para recuperar palavras ou blocos associados às coordenadas do componente detectado, evitando a aplicação desnecessária de OCR.
-
-Nos casos em que o material é escaneado, ou quando não há texto digital confiável na região analisada, o Tesseract OCR é aplicado seletivamente sobre o recorte visual previamente isolado. Essa abordagem evita o processamento indiscriminado de páginas inteiras e reduz problemas comuns em documentos com layout complexo, como quebras incorretas de leitura, desalinhamento de tabelas e mistura de conteúdos pertencentes a regiões distintas da página. Como saída, cada componente passa a possuir, além de sua representação visual e geométrica, um conteúdo textual associado.
+\begin{itemize}
+    \item \textbf{Entrada:} Coordenadas dos componentes lógicos e seus respectivos recortes geométricos.
+    \item \textbf{Processamento:} O sistema aplica uma estratégia híbrida de extração de caracteres. Primeiramente, utiliza o PyMuPDF para mapear as coordenadas do componente (\textit{bounding box}) contra a camada de texto nativa do arquivo digital, extraindo as \textit{strings} exatas daquela região. Em casos de falha, de arquivos escaneados ou de áreas gráficas específicas, o sistema executa a contingência (\textit{fallback}), disparando o motor Tesseract OCR diretamente sobre a matriz recortada na Fase 3.
+    \item \textbf{Saída:} Uma \textit{string} de texto delimitada, associada estritamente aos contornos daquele componente específico, para garantir que parágrafos de colunas diferentes não sejam sobrepostos indevidamente.
+\end{itemize}
 
 \subsection{Fase 5: Descrição visual de componentes}
 \label{subsec:fase5_descricao_visual}
 
-Após a extração textual localizada, o fluxo assíncrono realiza o enriquecimento semântico dos componentes visuais detectados no documento. Essa etapa tem como objetivo representar, em formato textual, informações presentes em elementos cuja compreensão não depende apenas de caracteres extraídos por OCR ou pela camada textual do PDF. Em materiais didáticos, componentes como gráficos, diagramas, figuras, esquemas, fórmulas e determinadas tabelas podem transmitir conhecimento por meio de relações espaciais, setas, agrupamentos, formas, proporções e organização visual.
-
-Para lidar com esses casos, o presente trabalho utiliza o modelo Qwen2.5-VL-7B-Instruct sobre os recortes visuais previamente isolados. O modelo é aplicado de forma seletiva, priorizando componentes classificados como elementos visuais ou multimodais pela etapa de análise de layout. A partir de cada recorte, o sistema gera uma descrição textual estruturada contendo informações como o tipo do componente, os elementos visuais identificáveis, as relações relevantes entre esses elementos e uma síntese do conteúdo representado.
-
-Essa descrição visual não substitui o recorte original nem a extração textual realizada na fase anterior. Em vez disso, atua como uma camada complementar de representação semântica, permitindo que informações originalmente visuais sejam posteriormente vetorizadas e recuperadas por meio de busca semântica. Dessa forma, diagramas, gráficos e figuras passam a integrar a base de conhecimento do EDGAR não apenas como imagens associadas a coordenadas, mas também como descrições textuais indexáveis.
-
-Como saída desta fase, cada componente visual processado passa a possuir, além do recorte, da classe, das coordenadas e do texto extraído, quando disponível, uma descrição textual estruturada. Esse conteúdo será utilizado na etapa seguinte de vetorização e indexação, permitindo que o modelo gerador empregado no fluxo síncrono receba evidências enriquecidas sem a necessidade de processar imagens diretamente durante a consulta do estudante.
+\begin{itemize}
+    \item \textbf{Entrada:} Recortes visuais puramente não-textuais (como componentes previamente classificados em \textit{figure}, \textit{table} ou \textit{isolate\_formula}).
+    \item \textbf{Processamento:} O modelo gerador Qwen2.5-VL-7B-Instruct realiza a análise do recorte visual. A inferência é configurada para representar informações que extrapolam a capacidade de extração do OCR, traduzindo propriedades visuais, como agrupamentos lógicos em tabelas, a topologia de um diagrama ou sintaxe de equações matemáticas, em descrições textuais de caráter analítico.
+    \item \textbf{Saída:} Uma \textit{string} complementar de descrição estruturada contendo o tipo do elemento, a síntese do seu conteúdo e as relações espaciais observadas, atuando como o enriquecimento semântico do componente.
+\end{itemize}
 
 \subsection{Fase 6: Vetorização e indexação multimodal híbrida}
 \label{subsec:fase6_indexacao_hibrida}
 
-A fase final do fluxo \textit{offline} consolida os componentes processados e os prepara para recuperação no momento da consulta. Nesta etapa, são reunidas as representações textuais produzidas nas fases anteriores, incluindo o texto extraído diretamente do PDF ou por OCR localizado, bem como as descrições visuais estruturadas geradas para elementos como figuras, gráficos, diagramas, fórmulas e tabelas. Esses conteúdos são submetidos ao modelo BGE-M3, por meio da biblioteca Sentence Transformers, para a geração de vetores semânticos capazes de representar os componentes em um espaço vetorial multilíngue.
-
-Em seguida, os vetores gerados são armazenados no Qdrant juntamente com seus metadados estruturais, incluindo identificador do documento, número da página, classe do componente, coordenadas geométricas, texto extraído, descrição visual e referência ao recorte correspondente. Essa organização permite que a busca semântica recupere não apenas fragmentos textuais relevantes, mas também elementos visuais previamente descritos e associados à sua posição original no documento.
-
-Dessa forma, a indexação assume caráter multimodal híbrido, articulando texto extraído, descrição visual, recorte do componente e metadados geométricos em uma mesma unidade de recuperação. Essa estrutura permite que, no fluxo síncrono, o modelo gerador receba evidências enriquecidas sobre o conteúdo didático, enquanto a interface LuminIA Reader mantém a capacidade de exibir visualmente o componente original utilizado como base para a resposta.
+\begin{itemize}
+    \item \textbf{Entrada:} A totalidade dos fragmentos processados, compreendendo as transcrições de texto da Fase 4, as descrições visuais geradas na Fase 5 e os metadados acumulados.
+    \item \textbf{Processamento:} Os artefatos textuais são processados pelo modelo multilíngue BGE-M3 (via biblioteca Sentence Transformers), que os projeta matematicamente em \textit{embeddings} de alta dimensionalidade. Simultaneamente, o EDGAR estrutura um pacote JSON (\textit{payload}) agregando os metadados espaciais de origem.
+    \item \textbf{Saída:} Indexação final no banco de dados vetorial Qdrant. Cada registro armazenado passa a conter o \textit{embedding} semântico atrelado a um \textit{payload} obrigatório com os seguintes campos: identificador do documento (\texttt{doc\_id}), número da folha (\texttt{pagina}), rótulo estrutural (\texttt{classe}), coordenadas X/Y (\texttt{bbox}), texto transcrito (\texttt{texto\_extraido}), texto descritivo (\texttt{descricao\_visual}) e referência física do recorte (\texttt{crop\_ref}).
+\end{itemize}
 
 \section{Fluxo síncrono de recuperação e geração}
 \label{sec:fluxo_sincrono_recuperacao_geracao}
 
-O fluxo síncrono de recuperação e geração, também referido como fluxo \textit{online}, corresponde à etapa responsável por atender às consultas realizadas pelo estudante na aplicação cliente LuminIA Reader. Diferentemente do fluxo assíncrono, no qual o documento é previamente segmentado, enriquecido semanticamente e indexado, esta etapa opera sobre a base de conhecimento já estruturada pelo EDGAR. Seu objetivo é recuperar evidências relevantes a partir da pergunta do usuário, organizar essas informações em um contexto adequado ao modelo gerador e retornar uma resposta acompanhada dos metadados necessários para rastrear sua origem no documento.
-
-A separação entre os fluxos assíncrono e síncrono busca reduzir o custo computacional no momento da consulta, uma vez que as operações mais custosas de processamento documental, análise visual e descrição de componentes já foram executadas durante a ingestão. Assim, a etapa síncrona concentra-se em três operações principais: vetorização da pergunta, recuperação dos componentes mais relevantes no banco vetorial e geração da resposta com base nas evidências recuperadas. Esse processo é composto por duas fases principais, seguidas pela comunicação com a interface cliente para visualização das evidências visuais associadas.
+O fluxo síncrono de recuperação e geração (\textit{online}) atua como o motor de inferência em tempo real da arquitetura. Operando estritamente sobre a base vetorial populada durante a etapa de ingestão, este fluxo é projetado para minimizar a latência computacional. Suas operações restringem-se à vetorização da consulta, à busca matemática por similaridade e à orquestração do \textit{prompt} para o modelo de linguagem principal. O processo é estruturado em duas fases analíticas, resultando no empacotamento dos dados para a camada de apresentação.
 
 \subsection{Fase 7: Recuperação semântica e associação de evidências}
 \label{subsec:fase7_recuperacao_evidencias}
 
-O fluxo inicia-se quando o estudante submete uma dúvida em linguagem natural por meio da aplicação cliente LuminIA Reader. A pergunta é encaminhada para o EDGAR, onde é convertida em uma representação semântica utilizando o mesmo modelo de \textit{embeddings} adotado na etapa de indexação, o BGE-M3 via Sentence Transformers. Essa correspondência mantém a compatibilidade entre a representação da consulta e os vetores previamente armazenados para os componentes documentais.
-
-Em seguida, a arquitetura realiza uma busca por similaridade no Qdrant, com o objetivo de identificar os componentes mais aderentes à intenção da consulta. A recuperação não se limita ao texto associado ao vetor encontrado. Cada resultado retornado pelo banco vetorial inclui também os metadados estruturais armazenados no fluxo assíncrono, como identificador do documento, número da página, classe do componente, coordenadas, texto extraído, descrição visual gerada e referência ao recorte correspondente.
-
-Dessa forma, esta fase permite reconstruir a evidência em suas dimensões textual, visual e espacial. O texto extraído e a descrição visual estruturada são utilizados como base semântica para a geração da resposta, enquanto as coordenadas e o recorte preservam a rastreabilidade da informação no documento original. Esse mecanismo diferencia a arquitetura de abordagens baseadas apenas em fragmentos textuais, pois mantém a relação entre o conteúdo recuperado, sua representação visual e sua posição no material didático.
+\begin{itemize}
+    \item \textbf{Entrada:} Pergunta em linguagem natural submetida pelo estudante via aplicação cliente.
+    \item \textbf{Processamento:} A consulta é codificada pelo modelo BGE-M3, garantindo paridade dimensional com o espaço vetorial do banco de dados. O vetor resultante é utilizado para executar uma busca por similaridade geométrica (cosseno) no Qdrant, recuperando os componentes mais próximos (\textit{Top-K}). A operação resgata o \textit{payload} completo de cada registro, recompondo a evidência por meio do cruzamento entre sua classe estrutural, texto nativo e descrição visual gerada previamente.
+    \item \textbf{Saída:} Um subconjunto ordenado de componentes de alta relevância, contendo a síntese semântica e as coordenadas espaciais necessárias para a sustentação da resposta.
+\end{itemize}
 
 \subsection{Fase 8: Engenharia de contexto e inferência}
 \label{subsec:fase8_engenharia_contexto}
 
-Após a recuperação dos componentes mais relevantes, o EDGAR organiza as evidências em um contexto de entrada para o modelo gerador. Essa etapa tem como finalidade selecionar e estruturar as informações recuperadas de modo que o modelo receba apenas os fragmentos diretamente relacionados à dúvida do estudante, evitando o envio de páginas completas ou blocos extensos com informações periféricas.
-
-O contexto é composto pelos textos extraídos dos componentes, pelas descrições visuais geradas no fluxo assíncrono e por metadados mínimos de rastreabilidade, como página, classe do elemento e indicação da evidência visual associada. Os recortes visuais não são utilizados como entrada direta do modelo nesta fase; eles permanecem vinculados ao componente recuperado para fins de verificação, rastreabilidade e visualização posterior na interface. Assim, o gerador textual atua sobre uma representação semântica previamente enriquecida dos elementos textuais e visuais do documento.
-
-A resposta é então gerada pelo Qwen2.5-7B-Instruct, modelo de linguagem compacto da classe 7B--8B, selecionado por sua adequação a tarefas de resposta a perguntas, seguimento de instruções e suporte multilíngue. No contexto do EDGAR, o modelo não deve depender exclusivamente de seu conhecimento paramétrico, mas produzir uma resposta orientada pelas evidências recuperadas. Essa estratégia busca favorecer respostas mais aderentes ao material didático e reduzir a influência de ruídos marginais presentes no layout original do documento.
+\begin{itemize}
+    \item \textbf{Entrada:} A consulta original do usuário e o subconjunto de evidências estruturadas recuperadas na Fase 7.
+    \item \textbf{Processamento:} O módulo de engenharia de contexto organiza as evidências recuperadas na Fase 7 em um \textit{prompt} de instrução fechada estruturado em três seções distintas. A primeira seção, denominada \texttt{[INSTRUÇÃO]}, direciona o modelo gerador a basear sua resposta exclusivamente nos fragmentos fornecidos, inibindo a produção de conteúdo não fundamentado nas evidências. A segunda seção, \texttt{[EVIDÊNCIAS]}, apresenta os componentes recuperados em ordem decrescente de pontuação de similaridade, cada um acompanhado de sua classe estrutural, número de página e identificador de documento. Para componentes textuais (\texttt{plain\_text}, \texttt{title}), é injetado o campo \texttt{texto\_extraido}; para componentes visuais (\texttt{table}, \texttt{figure}, \texttt{isolate\_formula}), é injetado o campo \texttt{descricao\_visual} gerado na Fase 5. A terceira seção, \texttt{[PERGUNTA]}, apresenta a consulta original do usuário sem modificações. Para preservar o desempenho de latência (\textit{time-to-first-token}), as matrizes de imagem dos recortes visuais não são transmitidas ao modelo gerador; a inferência atua exclusivamente sobre a representação textual enriquecida produzida na Fase 5. A parametrização da chamada ao modelo condiciona a geração à presença obrigatória de citação à evidência utilizada, viabilizando a rastreabilidade da resposta ao componente documental de origem.
+    \item \textbf{Saída:} Um objeto JSON final contendo a resposta articulada em linguagem natural e a relação explícita dos componentes utilizados como fontes, com seus respectivos identificadores de documento, página e metadados geométricos.
+\end{itemize}
 
 \subsection{Interação com a aplicação cliente e visualização de evidências}
 \label{subsec:interacao_aplicacao_cliente}
 
-A finalização do fluxo síncrono ocorre com o envio da resposta e das evidências associadas para a aplicação cliente LuminIA Reader. Após a inferência, o EDGAR estrutura um \textit{payload} JSON contendo a resposta textual, a lista de componentes utilizados como evidência, seus respectivos metadados geométricos e as referências aos recortes visuais correspondentes.
+A etapa final do fluxo síncrono consiste no retorno de um \textit{payload} JSON ao LuminIA Reader. Ao receber esse pacote de dados, os controladores da interface (Vue.js) atualizam o estado do painel de respostas e encaminham as coordenadas espaciais (\textit{bounding boxes}) para o mecanismo de renderização do PDF.js. Esse processo converte as posições cartesianas em marcações visuais sobrepostas à página exibida no navegador (\textit{canvas}), permitindo que o estudante identifique exatamente qual tabela, figura ou parágrafo fundamentou a resposta gerada pelo sistema.
 
-Ao receber esse \textit{payload}, o LuminIA Reader exibe a resposta no painel lateral de tutoria e utiliza os metadados espaciais para destacar, no leitor de PDF, o componente relacionado à informação apresentada. Como a interface é construída com Vue.js e PDF.js, torna-se possível controlar a página exibida, a escala de visualização e a sobreposição da camada de destaque sobre o documento. Esse mecanismo permite que o estudante acompanhe não apenas a resposta gerada, mas também a evidência documental que sustenta aquela informação.
+A sequência de interações e a troca de mensagens ao longo desse ciclo são apresentadas na Figura~\ref{fig:interacao_fluxo_online}, que ilustra a requisição originada na aplicação cliente, sua passagem pelo banco vetorial e pelo modelo gerador, e o retorno da resposta acompanhada de suas referências espaciais.
 
-Para esclarecer a dinâmica temporal e a troca de mensagens durante o fluxo síncrono, a Figura~\ref{fig:interacao_fluxo_online} apresenta o diagrama de sequência correspondente. O processo inicia-se com o envio da consulta pela aplicação cliente LuminIA Reader à arquitetura EDGAR. Em seguida, o EDGAR consulta o banco vetorial Qdrant para recuperar os componentes mais relevantes e seus metadados associados. Após receber essas evidências, a arquitetura estrutura o contexto e o encaminha ao modelo gerador Qwen2.5-7B. A resposta produzida retorna ao EDGAR, que consolida o \textit{payload} final com a resposta textual, os metadados geométricos e as referências visuais necessárias para a visualização na aplicação cliente.
 
 \begin{figure}[ht]
 \centering
@@ -230,34 +225,34 @@ Para esclarecer a dinâmica temporal e a troca de mensagens durante o fluxo sín
 \section{Plano de avaliação experimental}
 \label{sec:plano_avaliacao_experimental}
 
-O plano de avaliação experimental do presente trabalho foi definido com o objetivo de mensurar a viabilidade técnica da arquitetura EDGAR em tarefas de consulta a materiais didáticos multimodais em PDF. O estudo buscará observar se a organização desses materiais em componentes de granularidade fina, associada à extração textual, à descrição visual, à indexação vetorial e à recuperação de metadados geométricos, contribui para a obtenção de respostas mais aderentes às evidências recuperadas.
-
-A análise será conduzida em quatro dimensões complementares: infraestrutura de execução, composição do conjunto de teste, comparação com configurações alternativas de recuperação e aplicação de métricas de desempenho e qualidade semântica. Dessa forma, o protocolo experimental não se limita a avaliar a resposta final gerada pelo modelo de linguagem, mas também considera a eficiência do processamento, a precisão na recuperação das evidências e a rastreabilidade dos componentes utilizados na resposta.
+O plano de avaliação experimental tem como objetivo validar, de forma quantitativa e qualitativa, a eficácia da arquitetura proposta no presente trabalho. O protocolo foi concebido para isolar o impacto da granularidade fina na mitigação de ruído estrutural e de alucinações. Para assegurar a reprodutibilidade e o rigor científico da análise, a validação está estruturada em quatro dimensões: infraestrutura experimental, \textit{dataset} de validação, cenários de controle (\textit{baselines}) e métricas de desempenho.
 
 \subsection{Ambiente de execução e infraestrutura computacional}
 \label{subsec:ambiente_execucao}
 
-Para viabilizar a execução dos testes sob restrições locais de hardware, os módulos computacionais da arquitetura EDGAR serão executados em uma infraestrutura remota provisionada em ambiente de computação em nuvem. Essa infraestrutura será configurada em sistema Linux, preferencialmente com suporte a contêineres Docker, de modo a concentrar remotamente as etapas de maior custo computacional, como a execução dos modelos de linguagem, a geração de descrições visuais e a indexação dos componentes documentais.
+Para refletir um cenário de implementação realista e isolar a carga computacional, o protocolo de testes adotará a seguinte separação de ambientes:
+\begin{itemize}
+    \item \textbf{Arquitetura EDGAR:} Operará em infraestrutura de nuvem baseada em Linux e provisionada com contêineres Docker. Esse ambiente concentrará a aceleração via GPU necessária para as inferências do modelo de visão (DocLayout-YOLO), do gerador multimodal (Qwen2.5-VL), do vetorizador (BGE-M3) e do gerador textual (Qwen2.5-7B). Técnicas de quantização poderão ser aplicadas aos modelos de linguagem da classe 7B--8B para viabilizar a execução em restrições de memória de vídeo (VRAM).
+    \item \textbf{Aplicação cliente LuminIA Reader:} Será executada em ambiente de desenvolvimento convencional. No escopo do protocolo experimental, sua função restringe-se a consumir os serviços da arquitetura: disparar os gatilhos de tempo para cálculo de latência de rede, submeter as perguntas do \textit{dataset} e atestar a correta renderização visual das \textit{bounding boxes} retornadas.
+\end{itemize}
 
-No arranjo experimental deste trabalho, a aplicação cliente LuminIA Reader será utilizada como meio de interação com a arquitetura, permitindo o envio de documentos, a submissão de perguntas e a visualização das respostas e evidências retornadas. Essa aplicação poderá ser executada em ambiente de desenvolvimento convencional, enquanto a arquitetura concentrará as etapas de processamento documental, recuperação vetorial, engenharia de contexto e inferência. Dessa forma, preserva-se a separação entre a camada de interação com o usuário e os módulos especializados da proposta.
-
-Durante os experimentos, serão monitorados aspectos como tempo de processamento no fluxo assíncrono, latência no fluxo síncrono, consumo de memória e taxa de geração de tokens do modelo gerador. Como a arquitetura utiliza modelos compactos da classe 7B--8B, a execução poderá empregar técnicas de otimização ou quantização, quando necessário, a fim de adequar o consumo computacional às limitações da infraestrutura disponível.
-
-\subsection{Conjunto de documentos e perguntas de avaliação}
+\subsection{Conjunto de documentos e consultas (\textit{Dataset} de avaliação)}
 \label{subsec:conjunto_documentos_perguntas}
 
-O conjunto de documentos de avaliação será composto por materiais didáticos reais e heterogêneos em formato PDF, com foco em disciplinas das áreas de ciências exatas e tecnológicas. Serão priorizados documentos que apresentem estrutura visual complexa, incluindo capítulos de livros, apostilas, anotações manuscritas e apresentações de slides convertidas para PDF. A seleção buscará contemplar materiais com tabelas, gráficos, diagramas, fórmulas, figuras, caixas explicativas e relações espaciais relevantes entre texto e imagem.
+A avaliação não utilizará \textit{datasets} genéricos, mas um conjunto de dados desenvolvido especificamente para o domínio educacional, composto por dois elementos principais:
 
-A partir desses documentos, será elaborado um conjunto de perguntas em linguagem natural com o objetivo de simular dúvidas comuns de estudantes durante a leitura do material. Cada pergunta será previamente associada a uma ou mais evidências esperadas no documento, registrando informações como página, tipo de componente, trecho textual de referência, descrição visual esperada e, quando aplicável, coordenadas aproximadas do elemento correspondente.
+\begin{enumerate}
+\item \textbf{Base Documental:} Uma amostra curada de materiais didáticos reais em formato PDF, com foco em disciplinas de ciências exatas. A escolha desse domínio deve-se à sua complexidade e à diversidade de elementos visuais presentes nos documentos, proporcionando um cenário desafiador para a avaliação do sistema. O conjunto incluirá páginas com texto denso, tabelas de dados, diagramas relacionais e fórmulas matemáticas.
 
-Esse mapeamento prévio permitirá avaliar não apenas se a resposta final é semanticamente adequada, mas também se o EDGAR recupera os componentes corretos entre os primeiros resultados da busca. Dessa forma, o conjunto de perguntas funcionará como base de referência para a avaliação da precisão de recuperação, da fidelidade das respostas e da capacidade do sistema em preservar a rastreabilidade entre pergunta, evidência e documento original.
+\item \textbf{Consultas de Validação:} Um repositório de perguntas que simulam dúvidas reais de estudantes. Para fins de avaliação, cada pergunta será associada a um gabarito de referência previamente definido. Esse gabarito especificará a página, a classe geométrica, a transcrição textual ou a informação visual que deverá ser recuperada pelo EDGAR para que a resposta seja considerada correta.
 
-\subsection{Configurações comparativas de avaliação}
+\end{enumerate}
+
+
+\subsection{Configurações comparativas (\textit{Baselines})}
 \label{subsec:configuracoes_comparativas}
 
-Para verificar o impacto da granularidade fina proposta pela arquiteteura, a avaliação será conduzida a partir de configurações comparativas. O objetivo é contrastar a arquitetura proposta com abordagens mais simples de recuperação documental, permitindo observar em que medida a segmentação por componentes, a descrição visual e a associação de metadados geométricos contribuem para a qualidade da recuperação e da geração.
-
-A Tabela~\ref{tab:configuracoes_comparativas} apresenta as configurações previstas para comparação experimental.
+Para mensurar o ganho de desempenho isolado de cada componente metodológico da arquitetura, a avaliação submeterá o mesmo \textit{dataset} a quatro configurações de recuperação distintas. O objetivo é estabelecer linhas de base (\textit{baselines}) para contrastar o paradigma de \textit{chunking} linear com o particionamento visual de granularidade fina. A Tabela~\ref{tab:configuracoes_comparativas} consolida essas configurações.
 
 \begin{table}[H]
 \centering
@@ -298,18 +293,18 @@ EDGAR completo
 \end{minipage}
 \end{table}
 
-As configurações comparativas serão avaliadas sobre o mesmo conjunto de documentos e perguntas, de modo a permitir uma análise consistente entre os diferentes métodos. A configuração completa do EDGAR será tratada como proposta principal, enquanto as demais funcionarão como linhas de base ou variações controladas da própria arquitetura, permitindo examinar o impacto de cada decisão arquitetural sobre o desempenho do sistema.
-
 \subsection{Métricas e protocolo de avaliação}
 \label{subsec:metricas_protocolo}
 
-A avaliação será organizada em três dimensões principais: desempenho computacional, qualidade da recuperação e qualidade da resposta gerada. A dimensão de desempenho computacional será mensurada por meio de métricas temporais, incluindo o tempo total do fluxo assíncrono de ingestão e indexação, o tempo de descrição visual dos componentes, o tempo de recuperação vetorial e a latência de ponta a ponta ($L_{p2p}$) no fluxo síncrono. A latência de ponta a ponta será calculada desde o envio da pergunta pelo LuminIA Reader até o recebimento do \textit{payload} final contendo resposta, evidências e metadados.
+Os resultados de cada configuração comparativa serão parametrizados em três eixos de medição empírica:
+\begin{itemize}
+    \item \textbf{Desempenho Computacional:} Mensuração de custo de máquina e tempo. Inclui o tempo absoluto de processamento do fluxo \textit{offline} (por página e por documento) e a métrica de latência de ponta a ponta ($L_{p2p}$) no fluxo \textit{online}, calculada do despacho da \textit{string} de consulta até o retorno completo do \textit{payload} JSON.
+    \item \textbf{Qualidade de Recuperação (Rastreabilidade):} Avaliada pelo cruzamento dos artefatos recuperados contra o \textit{ground-truth}. Utilizará a métrica \textit{Context Precision} e \textit{Recall@k} para atestar se a arquitetura priorizou geometricamente as evidências corretas no ranqueamento vetorial.
+    \item \textbf{Qualidade de Geração (Semântica):} As inferências do modelo gerador serão avaliadas por meio das métricas propostas pelo \textit{framework} RAGAS \citeb{es2024ragas}: \textit{Faithfulness} (fidelidade contextual), que quantifica a proporção de afirmações da resposta que podem ser diretamente atribuídas às evidências fornecidas no contexto, constituindo uma medida objetiva da ausência de alucinações extrínsecas; e \textit{Answer Relevance} (relevância da resposta), que avalia o grau de aderência da resposta à pergunta submetida, penalizando respostas que, embora factuais, desviem do foco da consulta. Ambas as métricas são calculadas de forma automatizada a partir da tripla (pergunta, evidências recuperadas e resposta gerada), conforme especificado em \citeonline{es2024ragas}.
 
-A qualidade da recuperação será avaliada a partir da correspondência entre os componentes recuperados pelo sistema e as evidências esperadas previamente mapeadas no conjunto de perguntas. Para isso, serão consideradas métricas como Precisão de Recuperação (\textit{Context Precision}), Recall@k e posição do primeiro componente correto no ranqueamento. Essas métricas permitirão verificar se o EDGAR consegue priorizar os blocos mais relevantes entre os primeiros resultados retornados pelo banco vetorial.
+\end{itemize}
 
-A qualidade da resposta gerada será analisada por métricas associadas a sistemas de Geração Aumentada por Recuperação, como Fidelidade Contextual (\textit{Faithfulness}) e Relevância da Resposta (\textit{Answer Relevance}). A Fidelidade Contextual avaliará se a resposta produzida pelo modelo gerador está sustentada pelas evidências recuperadas, enquanto a Relevância da Resposta verificará se a saída atende adequadamente à dúvida formulada pelo estudante. Sempre que necessário, a avaliação automatizada poderá ser complementada por inspeção manual, especialmente em casos que envolvam interpretação de evidências visuais ou ambiguidade na resposta.
-
-A Tabela~\ref{tab:matriz_experimentos} sintetiza os principais componentes avaliados, suas especificações e as métricas associadas ao protocolo experimental.
+A Tabela~\ref{tab:matriz_experimentos} mapeia essas dimensões contra seus respectivos módulos e critérios de avaliação.
 
 \begin{table}[H]
 \centering
@@ -360,13 +355,13 @@ Rastreabilidade
 \end{tabularx}
 
 \vspace{0.2cm}
-{\small Fonte: Elaborado pelo autor.}
+{\raggedright\footnotesize Fonte: Elaborado pelo autor.\par}
 \end{table}
 
 \section{Cronograma}
 \label{sec:cronograma}
 
-Nesta seção, é apresentado o cronograma de atividades planejadas para a continuidade do projeto. O planejamento contempla as etapas já realizadas no âmbito do TCC I, como a definição do tema, a revisão bibliográfica, a especificação arquitetural e a prototipagem inicial da interface, bem como as atividades previstas para a implementação, integração e avaliação experimental da arquitetura proposta.
+O cronograma de atividades, consolidado na Tabela~\ref{tab:cronograma_projeto}, mapeia os ciclos de desenvolvimento executados na fase inicial (TCC I) e o planejamento estrito das implementações, baterias de testes experimentais e redação final previstos para a conclusão da pesquisa (TCC II).
 
 \begin{table}[ht]
 \centering
@@ -397,7 +392,7 @@ Definição do tema e delimitação do problema
 \hline
 
 Revisão bibliográfica e trabalhos relacionados 
-& X & X & X & X &  &  &  &  &  &  \\ 
+& X & X &  &  &  &  &  &  &  &  \\ 
 \hline
 
 Especificação arquitetural do EDGAR 
@@ -408,16 +403,16 @@ Definição dos componentes tecnológicos e do plano de avaliação
 &  &  & X & X &  &  &  &  &  &  \\ 
 \hline
 
-Prototipagem inicial da interface LuminIA Reader 
-&  &  &  & X & X &  &  &  &  &  \\ 
-\hline
-
 Escrita e revisão do TCC I 
-&  & X & X & X & X &  &  &  &  &  \\ 
+&  & X & X & X &  &  &  &  &  &  \\ 
 \hline
 
 Defesa do TCC I 
 &  &  &  &  & X &  &  &  &  &  \\ 
+\hline
+
+Desenvolvimento da aplicação cliente LuminIA Reader 
+&  &  &  &  & X & X &  &  &  &  \\ 
 \hline
 
 Configuração do ambiente de execução e repositórios 
@@ -433,7 +428,7 @@ Desenvolvimento do fluxo síncrono de recuperação e geração
 \hline
 
 Construção do conjunto de documentos e perguntas de avaliação 
-&  &  &  &  &  &  & X & X &  &  \\ 
+&  &  &  &  &  & X & X & X &  &  \\ 
 \hline
 
 Integração entre EDGAR e LuminIA Reader 

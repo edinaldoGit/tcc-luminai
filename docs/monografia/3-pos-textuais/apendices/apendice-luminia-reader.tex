@@ -1,0 +1,29 @@
+\chapter{Arquitetura da Aplicação Cliente LuminIA Reader}
+\label{ap:luminia-reader}
+
+O LuminIA Reader constitui uma aplicação web independente, concebida para atuar como camada de apresentação e interação entre o usuário e o motor de inteligência artificial representado pela arquitetura EDGAR. Do ponto de vista da engenharia de \textit{software}, trata-se de um sistema autônomo, com \textit{frontend} e \textit{backend} próprios, que se comunica com o EDGAR por meio de chamadas a uma \textit{Application Programming Interface} (API) REST.
+
+\section{Camadas de software}
+\label{sec:ap-luminia-camadas}
+
+O LuminIA Reader é estruturado em duas camadas:
+\begin{itemize}
+\item \textbf{\textit{Frontend}:} Implementado em Vue.js, é responsável pela renderização da interface, pela captura das interações do usuário e pela visualização das evidências retornadas. O componente PDF.js é integrado para renderizar o documento diretamente no navegador e receber as coordenadas de \textit{bounding boxes} retornadas pelo EDGAR, projetando marcações visuais sobrepostas ao \textit{canvas} da página correspondente.
+
+\item \textbf{\textit{Backend}:} Atua como intermediário entre o \textit{frontend} e a API do EDGAR, realizando o gerenciamento de sessões, o armazenamento temporário dos arquivos submetidos e o encaminhamento das requisições ao EDGAR, abstraindo do \textit{frontend} os detalhes do protocolo de comunicação com o motor de IA.
+
+\end{itemize}
+
+\section{Fluxos de interação}
+\label{sec:ap-luminia-fluxos}
+
+A interface do LuminIA Reader organiza-se em três estados funcionais progressivos:
+
+\begin{enumerate}
+\item \textbf{Estado de submissão:} O usuário acessa a aplicação e submete um arquivo PDF por meio de uma área de \textit{upload}. O \textit{backend} do LuminIA Reader encaminha o arquivo ao \textit{endpoint} de ingestão do EDGAR, que inicia o fluxo assíncrono de processamento. A interface exibe um indicador de progresso até a conclusão da indexação.
+
+\item \textbf{Estado de consulta:} Com o documento indexado, o usuário submete perguntas em linguagem natural por meio de um painel de chat. O \textit{backend} encaminha a consulta ao \textit{endpoint} de recuperação e geração do EDGAR e retorna ao \textit{frontend} um objeto JSON com a resposta e os metadados das evidências utilizadas.
+
+\item \textbf{Estado de visualização de evidências:} Ao receber a resposta, o \textit{frontend} exibe o texto gerado e aciona o PDF.js para navegar até a página da evidência principal, sobrepondo ao \textit{canvas} uma marcação visual na região delimitada pelas coordenadas \texttt{bbox} retornadas pelo EDGAR. Isso permite ao estudante identificar exatamente qual componente documental fundamentou a resposta recebida.
+
+\end{enumerate}

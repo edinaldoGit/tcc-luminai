@@ -169,6 +169,19 @@
 
 \usepackage{float}
 
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily,
+    string=[s]{"}{"},
+    stringstyle=\color{blue},
+    keywords={true,false,null},
+    keywordstyle=\color{magenta},
+    breaklines=true,
+    showstringspaces=false
+}
+
 \begin{document}	
 
 	% Elementos pré-textuais
@@ -206,8 +219,9 @@
 	%Elementos pós-textuais	
 	\bibliography{3-pos-textuais/referencias}
 %	\imprimirglossario	
-	%\imprimirapendices
+	\imprimirapendices
 		% Adicione aqui os apendices do seu trabalho
+		\input{3-pos-textuais/apendices/apendice-luminia-reader}
 		%\input{3-pos-textuais/apendices/apendice-a}
 		%\input{3-pos-textuais/apendices/apendice-b}
 		%\input{3-pos-textuais/apendices/apendice-c}

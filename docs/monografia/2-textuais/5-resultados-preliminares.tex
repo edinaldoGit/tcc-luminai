@@ -1,28 +1,394 @@
 \chapter{Resultados preliminares}
 \label{chap:resultados-preliminares}
 
-\section{Resultados preliminares da arquitetura EDGAR}
-\label{sec:preliminares_edgar}
+Este capítulo apresenta os resultados obtidos na fase preliminar de
+validação da arquitetura EDGAR. Em vez de se limitar à especificação
+dos artefatos esperados, esta etapa concentrou-se na execução de três
+experimentos piloto sobre documentos reais, com o objetivo de verificar
+empiricamente as premissas arquiteturais mais críticas antes da
+implementação completa dos fluxos. Os experimentos foram conduzidos
+sobre páginas selecionadas do livro \textit{University Physics Volume~1}
+\cite{ling2016university}, material de domínio público representativo dos
+documentos didáticos que a arquitetura se propõe a processar.
 
-Nesta etapa do trabalho, os resultados preliminares concentram-se na especificação arquitetural do EDGAR e na definição dos artefatos necessários para sua implementação e avaliação experimental. Como a proposta ainda se encontra em fase de concepção e planejamento metodológico, os resultados apresentados referem-se principalmente à organização dos fluxos, à delimitação dos módulos computacionais e à estrutura esperada para os dados intermediários produzidos pela arquitetura.
+Os resultados estão organizados em três seções. A Seção~\ref{sec:res_dla}
+avalia a viabilidade do modelo de Análise de Layout de Documentos (DLA)
+em páginas educacionais reais. A Seção~\ref{sec:res_meta} demonstra a
+estrutura de representação dos componentes documentais com dados reais
+extraídos do pipeline. A Seção~\ref{sec:res_ruido} apresenta evidências
+empíricas do impacto da granularidade fina sobre o ruído contextual,
+validando o argumento central da proposta.
 
-Entre os principais resultados preliminares da arquitetura EDGAR, destacam-se:
+\section{Viabilidade do DLA em Documentos Didáticos}
+\label{sec:res_dla}
 
-\begin{itemize}
-    \item \textbf{Segmentação e análise de layout de documentos:} definição do uso de modelos de Análise de Layout de Documentos (DLA) para identificação de regiões estruturais em páginas PDF, como blocos de texto, tabelas, figuras, fórmulas e elementos gráficos. Essa etapa deverá produzir \textit{bounding boxes} associadas a classes e índices de confiança, permitindo o isolamento dos componentes documentais em granularidade fina.
+O primeiro experimento avaliou a capacidade do DocLayout-YOLO de
+detectar e classificar componentes estruturais em páginas de materiais
+didáticos reais, sem nenhum ajuste fino (\textit{fine-tuning}) sobre o
+domínio educacional. O modelo foi executado em modo de inferência sobre
+uma amostra de 29 páginas, organizadas em dois subconjuntos: (i) 20
+páginas distribuídas ao longo do documento, selecionadas para cobrir a
+variabilidade geral de layout; e (ii) 9 páginas identificadas
+automaticamente como contendo tabelas, por meio de uma varredura prévia
+com limiar de confiança reduzido ($conf = 0{,}25$).
 
-    \item \textbf{Estruturação de metadados documentais:} definição do formato dos metadados associados aos componentes extraídos, incluindo identificador do documento, número da página, classe do elemento, coordenadas geométricas, texto extraído, descrição visual e referência ao recorte correspondente. Essa estrutura servirá como base para a indexação vetorial, a recuperação de evidências e a posterior visualização dos componentes na aplicação cliente.
-\end{itemize}
+\subsection{Configuração do experimento}
+\label{subsec:dla_config}
 
-\section{Protótipo da aplicação cliente LuminIA Reader}
-\label{sec:preliminares_luminia_reader}
+A execução deste experimento piloto foi realizada em um ambiente computacional restrito a processamento por CPU. Devido à ausência de aceleração gráfica (GPU) nesta etapa preliminar, a resolução de renderização das páginas via PyMuPDF foi reduzida para 150~DPI, diferentemente dos 300~DPI estipulados na especificação metodológica da arquitetura, com o objetivo de viabilizar o processamento das matrizes de imagem em tempo hábil. 
 
-Como artefato de apoio à demonstração e validação prática da arquitetura EDGAR, foi prevista a utilização do LuminIA Reader como aplicação cliente. No escopo deste trabalho, o protótipo não constitui o foco principal da pesquisa, mas permite representar a forma como o estudante poderá interagir com a arquitetura, submetendo documentos, enviando perguntas e visualizando as respostas acompanhadas das evidências recuperadas.
+Os parâmetros de inferência utilizaram um limiar de confiança de detecção de $conf \geq 0{,}30$ e tamanho de entrada de imagem de 1024~pixels. O modelo aplicado foi o \texttt{DocLayout-YOLO-DocStructBench}, obtido diretamente do repositório público no Hugging Face, e nenhuma modificação foi realizada em seus pesos ou hiperparâmetros originais.
 
-Entre os resultados preliminares relacionados à aplicação cliente, destacam-se:
+\subsection{Resultados da detecção}
+\label{subsec:dla_resultados}
 
-\begin{itemize}
-    \item \textbf{Ambiente de leitura e consulta:} definição de uma interface web composta por um leitor de PDF e um painel lateral de tutoria, no qual o estudante poderá submeter perguntas sobre o material didático e visualizar as respostas retornadas pelo EDGAR.
+Ao longo das 29 páginas processadas, o modelo detectou \textbf{425
+componentes} distribuídos entre as dez classes suportadas. A
+Tabela~\ref{tab:dla_distribuicao} apresenta a distribuição global por
+classe, consolidando os dois subconjuntos de páginas analisadas.
 
-    \item \textbf{Visualização de evidências no documento:} definição do mecanismo de destaque visual dos componentes recuperados, utilizando os metadados geométricos retornados pela arquitetura EDGAR para indicar, no próprio PDF, a região documental associada à resposta gerada.
-\end{itemize}
+\begin{table}[htb]
+\centering
+\caption{Distribuição de componentes detectados pelo DocLayout-YOLO nas 29 páginas analisadas.}
+\label{tab:dla_distribuicao}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Classe} & \textbf{Quantidade} & \textbf{Proporção (\%)} \\
+\midrule
+\texttt{plain\_text}      & 197 & 46,4 \\
+\texttt{abandon}          &  64 & 15,1 \\
+\texttt{title}            &  55 & 12,9 \\
+\texttt{figure}           &  30 &  7,1 \\
+\texttt{isolate\_formula} &  25 &  5,9 \\
+\texttt{figure\_caption}  &  19 &  4,5 \\
+\texttt{formula\_caption} &   9 &  2,1 \\
+\texttt{table}            &  12 &  2,8 \\
+\texttt{table\_caption}   &   8 &  1,9 \\
+\texttt{table\_footnote}  &   6 &  1,4 \\
+\midrule
+\textbf{Total}            & \textbf{425} & \textbf{100,0} \\
+\bottomrule
+\end{tabular}
+\fonte{Elaborado pelo autor.}
+\end{table}
+
+A inspeção visual das imagens geradas confirmou que as \textit{bounding
+boxes} delimitaram corretamente os componentes em todos os tipos de
+página avaliados, incluindo páginas de texto denso, páginas com tabelas
+de dados experimentais e páginas com fórmulas matemáticas e figuras. A
+Figura~\ref{fig:dla_diversidade} ilustra o resultado da detecção em uma
+página que concentra múltiplas classes simultaneamente. Na imagem à esquerda, observa-se a página original, enquanto à direita são apresentadas as \textit{bounding boxes} sobrepostas e coloridas por classe. A página analisada concentra componentes das classes \texttt{title}, \texttt{plain\_text}, \texttt{abandon}, \texttt{table}, \texttt{table\_caption} e \texttt{figure}. 
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{\textwidth}
+\caption{Detecção de componentes pelo DocLayout-YOLO na página~26 do documento avaliado.}
+\label{fig:dla_diversidade}
+\vspace{0.2cm}
+\includegraphics[width=\textwidth]{figuras/dla_pagina26.png}
+\vspace{0.1cm}
+\\ {\footnotesize Fonte: Elaborado pelo autor.}
+\end{minipage}
+\end{figure}
+
+A Figura~\ref{fig:dla_formula} apresenta a detecção em uma página com
+fórmulas matemáticas, relevante para os experimentos subsequentes. As regiões detectadas nessa página foram corretamente isoladas pelo modelo, porém não possuem representação textual acessível via extração direta, o que motiva a Fase~5 do fluxo assíncrono do EDGAR.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{\textwidth}
+\caption{Detecção de componentes pelo DocLayout-YOLO em página contendo fórmulas matemáticas.}
+\label{fig:dla_formula}
+\vspace{0.2cm}
+\includegraphics[width=\textwidth]{figuras/dla_pagina79.png}
+\vspace{0.1cm}
+\\ {\footnotesize Fonte: Elaborado pelo autor.}
+\end{minipage}
+\end{figure}
+
+\subsection{Constatações relevantes}
+\label{subsec:dla_constatacoes}
+
+A partir dos resultados obtidos, dois aspectos merecem destaque analítico:
+
+\textbf{Predominância da classe \texttt{abandon}:} A classe
+\texttt{abandon}, que agrupa cabeçalhos, rodapés, números de página e
+outros elementos estruturais sem valor informacional, correspondeu a
+\textbf{15,1\% de todos os componentes detectados}. Em abordagens de
+recuperação por página inteira, como a arquitetura ColPali
+\citeb{faysse2025colpali}, esses elementos seriam enviados integralmente
+ao modelo gerador como parte do contexto. O presente experimento oferece
+evidência empírica da magnitude desse ruído estrutural em materiais
+didáticos reais, reforçando a pertinência da filtragem por componente
+proposta pelo EDGAR.
+
+\textbf{Detecção de falso positivo com baixa confiança:} Na página~26,
+o modelo detectou um componente da classe \texttt{figure} com índice de
+confiança de $0{,}344$, correspondente a um marcador gráfico de pequenas
+dimensões (28~$\times$~29~pixels). Esse caso evidencia a necessidade de
+estabelecer um limiar mínimo de confiança e de dimensão de recorte nas
+Fases~3 e~4 do fluxo assíncrono, como critério de filtragem de
+detecções espúrias antes da extração textual e da descrição visual.
+
+Por fim, cabe registrar que a Fase~5 do fluxo assíncrono, a descrição visual
+automática de componentes via modelo Qwen2.5-VL-7B-Instruct, não foi executada
+nos experimentos piloto deste estágio da pesquisa. Os resultados apresentados
+nas Seções~\ref{sec:res_meta} e~\ref{sec:res_ruido}
+refletem, portanto, o comportamento do pipeline até a Fase~4 (extração textual
+localizada), com os campos \texttt{descricao\_visual} marcados como pendentes.
+Essa limitação é particularmente relevante para os componentes das classes
+\texttt{isolate\_formula}, \texttt{table} e \texttt{figure}, cujo valor
+informacional para a recuperação semântica depende integralmente da Fase~5.
+A execução e avaliação dessa etapa constitui, por isso, uma diretriz prioritária 
+para as futuras implementações e validações da arquitetura.
+
+\section{Estrutura de Representação dos Componentes Documentais}
+\label{sec:res_meta}
+
+O segundo experimento demonstrou a estrutura de metadados produzida pelo
+pipeline de ingestão ao ser aplicado a páginas reais do documento
+avaliado. O objetivo foi verificar se o formato de representação
+proposto é coerente com os dados reais extraídos e
+suficiente para suportar os dois usos \textit{downstream} previstos:
+a recuperação semântica no banco vetorial e a visualização de evidências
+na interface LuminIA~Reader.
+
+\subsection{Configuração do experimento}
+\label{subsec:meta_config}
+
+O pipeline foi executado sobre quatro páginas selecionadas para cobrir
+os principais tipos estruturais do material didático: página de texto
+denso, página com tabela de dados, página com fórmulas matemáticas e
+página com figuras e legendas. Para cada componente detectado, foram
+realizadas: extração textual localizada via PyMuPDF, recorte visual
+via OpenCV e geração do registro de metadados completo. A etapa de
+descrição visual (Fase~5) não foi executada neste experimento piloto,
+sendo representada pelo marcador
+\texttt{"[pendente - Fase~5, fluxo assíncrono]"} nos registros dos
+componentes visuais, conforme previsto na arquitetura.
+
+Ao todo, \textbf{54 componentes} foram extraídos e registrados nas
+quatro páginas processadas.
+
+\subsection{Estrutura de metadados com dados reais}
+\label{subsec:meta_estrutura}
+
+O Código~\ref{cod:meta_tabela} apresenta o registro completo de um
+componente da classe \texttt{table}, extraído da página~26 do documento.
+Este exemplo é representativo da estrutura que será indexada no Qdrant
+durante o fluxo assíncrono da arquitetura. Nota-se que o campo \texttt{requer\_descricao\_visual} sinaliza que o componente será processado pela Fase~5 do fluxo assíncrono.
+
+\begin{lstlisting}[
+  language=json,
+  caption={Registro de metadados de um componente \texttt{table} extraído da página~26 do documento avaliado.},
+  label=cod:meta_tabela
+]
+{
+  "id": "comp_0005",
+  "doc_id": "university-physics-volume-1_-_WEB",
+  "pagina": 26,
+  "tipo_pagina": "com_tabela",
+  "classe": "table",
+  "confianca_dla": 0.963,
+  "bbox": {
+    "x1": 428, "y1": 117,
+    "x2": 845, "y2": 334,
+    "largura": 417, "altura": 217
+  },
+  "texto_extraido": "ISQ Base Quantity\nSI Base Unit
+    Thermodynamic temperature\nkelvin (K)
+    Amount of substance\nmole (mol)
+    Luminous intensity\ncandela (cd)",
+  "requer_descricao_visual": true,
+  "descricao_visual": "[pendente - Fase 5, fluxo assincrono]",
+  "crop_ref": "resultados_metadados/recortes/comp_0005_pag26_table.jpg"
+}
+\end{lstlisting}
+
+A Figura~\ref{fig:recorte_tabela} apresenta o recorte visual associado
+a este registro, extraído pelo módulo de isolamento geométrico (Fase~3) e armazenado no campo \texttt{crop\_ref}. O recorte preserva a estrutura relacional da tabela, informação não capturada integralmente pela extração textual localizada. A comparação entre o recorte e o conteúdo do campo \texttt{texto\_extraido} evidencia
+uma limitação estrutural da extração textual pura: embora o PyMuPDF
+recupere os termos presentes na tabela, a estrutura relacional entre
+colunas e linhas é perdida no processo de linearização. Isso reforça a
+necessidade da Fase~5 para componentes classificados como
+\texttt{table}, que frequentemente transmitem informações por meio
+de relações espaciais entre células, e não apenas pelo conteúdo textual
+isolado.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{\textwidth}
+\caption{Recorte visual do componente \texttt{comp\_0005} (classe \texttt{table}), extraído da página~26.}
+\label{fig:recorte_tabela}
+\vspace{0.2cm}
+\includegraphics[width=\textwidth]{figuras/recorte_tabela.jpg}
+\vspace{0.1cm}
+\\ {\footnotesize Fonte: Elaborado pelo autor.}
+\end{minipage}
+\end{figure}
+
+O Código~\ref{cod:meta_formula} apresenta o registro de um componente
+da classe \texttt{isolate\_formula}, extraído da página~79. Neste caso,
+o campo \texttt{texto\_extraido} retorna vazio, pois fórmulas
+matemáticas são renderizadas como vetores ou imagens no PDF, tornando-as
+invisíveis para extratores de texto convencionais. Esse campo vazio confirma que a Fase~5 de descrição visual é estruturalmente necessária para esse tipo de componente.
+
+\begin{lstlisting}[
+  language=json,
+  caption={Registro de metadados de um componente \texttt{isolate\_formula} extraído da página~79.},
+  label=cod:meta_formula
+]
+{
+  "id": "comp_0039",
+  "doc_id": "university-physics-volume-1_-_WEB",
+  "pagina": 79,
+  "classe": "isolate_formula",
+  "confianca_dla": 0.871,
+  "bbox": {
+    "x1": 148, "y1": 312,
+    "x2": 510, "y2": 358,
+    "largura": 362, "altura": 46
+  },
+  "texto_extraido": "",
+  "requer_descricao_visual": true,
+  "descricao_visual": "[pendente - Fase 5, fluxo assincrono]",
+  "crop_ref": "resultados_metadados/recortes/comp_0039_pag79_isolate_formula.jpg"
+}
+\end{lstlisting}
+
+A Figura~\ref{fig:recorte_formula} apresenta o recorte visual
+correspondente. Observa-se que o conteúdo matemático é visualmente legível no recorte, em contraste com o campo \texttt{texto\_extraido} vazio resultante da extração via PyMuPDF. Isso demonstra que a informação existe e foi corretamente isolada pelo pipeline, porém é inacessível por meios puramente textuais. Esse
+resultado oferece evidência empírica direta da necessidade estrutural
+da Fase~5 do fluxo assíncrono para a classe \texttt{isolate\_formula}.
+
+\begin{figure}[ht]
+\centering
+\begin{minipage}{\textwidth}
+\caption{Recorte visual do componente \texttt{comp\_0039} (classe \texttt{isolate\_formula}), extraído da página~79.}
+\label{fig:recorte_formula}
+\vspace{0.2cm}
+\includegraphics[width=\textwidth]{figuras/recorte_formula.jpg}
+\vspace{0.1cm}
+\\ {\footnotesize Fonte: Elaborado pelo autor.}
+\end{minipage}
+\end{figure}
+
+\subsection{Análise da estrutura de metadados}
+\label{subsec:meta_analise}
+
+A execução do pipeline sobre dados reais confirmou que a estrutura de
+metadados proposta é operacionalmente coerente: todos os 54 componentes
+extraídos receberam valores válidos nos campos obrigatórios
+(\texttt{id}, \texttt{doc\_id}, \texttt{pagina}, \texttt{classe},
+\texttt{confianca\_dla}, \texttt{bbox} e \texttt{crop\_ref}). O campo
+\texttt{requer\_descricao\_visual} foi atribuído corretamente em todos
+os casos, identificando exclusivamente componentes das classes
+\texttt{figure}, \texttt{table} e \texttt{isolate\_formula} como
+candidatos à Fase~5. Nenhuma ambiguidade ou inconsistência estrutural
+foi identificada no formato de representação durante o experimento.
+
+\section{Evidência Empírica do Impacto da Granularidade Fina}
+\label{sec:res_ruido}
+
+O terceiro experimento constitui a validação empírica central deste
+trabalho. O objetivo foi quantificar a diferença entre dois contextos
+de recuperação, a página inteira e o componente isolado, em termos
+de volume de tokens entregues ao modelo gerador e presença de ruído
+estrutural, para perguntas específicas sobre o conteúdo do documento.
+
+\subsection{Configuração do experimento}
+\label{subsec:ruido_config}
+
+Foram selecionadas três perguntas em linguagem natural, cada uma
+associada a um componente-alvo previamente identificado no documento.
+Para cada pergunta, o experimento construiu dois contextos: o
+\textbf{Contexto~A}, composto pelo texto completo da página extraído
+via PyMuPDF; e o \textbf{Contexto~B}, composto apenas pelo texto
+extraído do componente-alvo detectado pelo DLA. Ambos os contextos
+foram avaliados quanto ao número de tokens e à proporção de ruído
+estrutural presente, medida pela quantidade de componentes da classe
+\texttt{abandon} detectados na página correspondente.
+
+\subsection{Resultados}
+\label{subsec:ruido_resultados}
+
+A Tabela~\ref{tab:ruido_contextual} apresenta os resultados comparativos
+para as três perguntas avaliadas.
+
+\begin{table}[H]
+\centering
+\caption{Comparação entre o Contexto~A (página inteira) e o Contexto~B
+         (componente EDGAR) em termos de tokens e ruído estrutural.}
+\label{tab:ruido_contextual}
+\begin{tabular}{p{5.2cm}rrrr}
+\toprule
+\textbf{Pergunta} &
+\textbf{Tok. A} &
+\textbf{Tok. B} &
+\textbf{Redução} &
+\textbf{Abandon} \\
+\midrule
+Quais são as unidades base do SI?
+  & 601 & 19 & 96,8\% & 31,2\% \\
+Como as fórmulas matemáticas são apresentadas?
+  & 184 &  0 & 100,0\% &  5,9\% \\
+Qual tabela de dados é apresentada nesta seção?
+  & 624 & 26 & 95,8\% & 17,6\% \\
+\midrule
+\textbf{Média}
+  & \textbf{470} & \textbf{15} & \textbf{96,2\%} & \textbf{18,2\%} \\
+\bottomrule
+\end{tabular}
+\legend{Tok.~A = tokens no contexto por página inteira;
+        Tok.~B = tokens no contexto por componente EDGAR;
+        Redução = percentual de redução de tokens;
+        Abandon = proporção de componentes de ruído estrutural
+        detectados na página.}
+\fonte{Elaborado pelo autor.}
+\end{table}
+
+A Figura~\ref{fig:comparativo_ruido} apresenta a comparação visual entre o Contexto~A (página inteira, 601 tokens) e o Contexto~B (componente EDGAR, 19 tokens) para a pergunta ``Quais são as unidades base do Sistema Internacional (SI)?''. O componente-alvo (\texttt{table}) está destacado em vermelho na representação da página inteira.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{\textwidth}
+\caption{Comparação visual de volume de tokens entre o Contexto~A (página inteira) e o Contexto~B (componente EDGAR).}
+\label{fig:comparativo_ruido}
+\vspace{0.2cm}
+\includegraphics[width=\textwidth]{figuras/comparativo_ruido.png}
+\vspace{0.1cm}
+\\ {\footnotesize Fonte: Elaborado pelo autor.}
+\end{minipage}
+\end{figure}
+
+\subsection{Discussão dos resultados}
+\label{subsec:ruido_discussao}
+
+Os resultados revelam uma redução média de \textbf{96,2\% no volume de
+tokens} entregues ao modelo gerador quando se substitui a recuperação
+por página inteira pela recuperação por componente documental. Esse
+achado quantifica, em escala real, o argumento arquitetural central do
+EDGAR: a granularidade fina não é apenas uma escolha de design, mas uma
+necessidade estrutural para a contenção do ruído contextual em
+documentos didáticos complexos. A drástica redução no volume de tokens representa a eliminação bem-sucedida de cabeçalhos, parágrafos não relacionados e elementos estruturais secundários antes da etapa de geração.
+
+O caso da página~79 merece análise específica. As cinco fórmulas
+matemáticas detectadas pelo DLA (\texttt{isolate\_formula}) retornaram
+\textbf{zero tokens} na extração textual, enquanto a página inteira
+forneceu 184 tokens, nenhum deles correspondente ao conteúdo das
+fórmulas. Isso significa que a abordagem de recuperação por página
+inteira não apenas insere ruído, como também falha em representar o
+conteúdo mais relevante para a pergunta formulada. Esse resultado
+demonstra empiricamente que, para componentes do tipo
+\texttt{isolate\_formula}, a Fase~5 de descrição visual não é uma
+etapa opcional do pipeline, sendo o único mecanismo capaz de produzir
+uma representação semântica indexável desses elementos.
+
+A proporção média de 18,2\% de componentes da classe \texttt{abandon}
+nas páginas avaliadas corrobora o resultado observado na
+Seção~\ref{sec:res_dla}: em uma recuperação por página inteira, mais
+de um em cada seis componentes entregues ao modelo gerador corresponde
+a cabeçalho, rodapé ou numeração de página, sem qualquer valor
+informacional para a resposta. O EDGAR, ao filtrar esses elementos na
+Fase~3 do fluxo assíncrono, elimina essa fonte de ruído antes mesmo da
+etapa de vetorização.
